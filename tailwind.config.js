@@ -49,7 +49,7 @@ module.exports = {
           900: "#09172e"
         },
         background: '#FFF', // Background
-        backgroundColor: {
+        backgroundImage: {
           'blue-to-white': 'linear-gradient(to bottom, #04A3EA, #FFFFFF)',
         },
       },

@@ -1,23 +1,10 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import {Button} from "./components/atoms";
 
 function App() {
   return (
-    <div className="App">
-      <header className="background h-screen flex flex-col justify-center items-center">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p className="text-black">
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link text-primary underline"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="h-screen bg-blue-to-white flex flex-col gap-4 justify-center items-center">
+      <Button className="border-2 border-secondary-500">Bordure secondaire</Button>
     </div>
   );
 }
