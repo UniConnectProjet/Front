@@ -3,6 +3,14 @@ module.exports = {
   content: ["./src/**/*.{html,js}"],
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ['Poppins', 'sans-serif'], // Ajouter Poppins comme font
+      },
+      fontSize: {
+        title: ['48px', { lineHeight: '64px', fontWeight: '700' }], // Titre
+        subtitle: ['22px', { lineHeight: '32px', fontWeight: '700' }], // Sous-titre
+        text: ['14px', { lineHeight: '16px', fontWeight: '400' }], // Texte normal
+      },
       colors: {
         primary: {
           100: "#cdedfb",
