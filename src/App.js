@@ -1,17 +1,11 @@
-import './App.css';
+import React from 'react';
+import { Button } from './components/atoms';
 
 function App() {
   return (
-    <div className="h-screen bg-blue-to-white flex flex-col gap-4 justify-center items-center">
-      <Button className="border-2 border-secondary-500">Bordure secondaire</Button>
-    </div>
-    <div className="p-6 font-poppins">
-      <h1 className="text-title text-primary-500">Ceci est un titre</h1>
-      <h2 className="text-subtitle text-secondary-500">Ceci est un sous-titre</h2>
-      <p className="text-text text-text-500">
-        Ceci est un texte normal. Edit <code>src/App.js</code> and save to reload.
-      </p>
-    </div>
+      <div className="h-screen bg-background flex justify-center items-center">
+          <Button className={`px-4 py-1 bg-primary-500 text-white font-poppins text-subtitle rounded-full hover:bg-primary-600 transition duration-300`}>Se connecter</Button>
+      </div>
   );
 }
 
