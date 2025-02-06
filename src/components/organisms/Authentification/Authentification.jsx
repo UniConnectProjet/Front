@@ -1,9 +1,10 @@
 import React from "react";
-import { Form } from "../../molecules";
+import { Form, LogoFond } from "../../molecules";
 
 const Authentification = ({ }) => {
   return (
-    <div className="h-screen bg-background flex flex-col justify-center items-center">
+    <div className="flex flex-row h-screen w-screen">
+      <LogoFond/>
       <Form/>
     </div>
   );
