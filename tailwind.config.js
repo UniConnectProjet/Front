@@ -1,14 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{html,js}"],
+  content: ["./src/**/*.{html,js,jsx,ts,tsx}"], // Inclut tous les fichiers React
   theme: {
     extend: {
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'], // Ajouter Poppins comme font
       },
       fontSize: {
-        title: ['48px', { lineHeight: '64px', fontWeight: '700' }], // Titre
-        subtitle: ['22px', { lineHeight: '32px', fontWeight: '700' }], // Sous-titre
+        title: ['38px', { lineHeight: '64px', fontWeight: '700' }], // Titre
+        subtitle: ['18px', { lineHeight: '32px', fontWeight: '700' }], // Sous-titre
         text: ['14px', { lineHeight: '16px', fontWeight: '400' }], // Texte normal
       },
       colors: {
@@ -21,9 +21,8 @@ module.exports = {
           600: "#0382bb",
           700: "#02628c",
           800: "#02415e",
-          900: "#01212f"
         },
-        secondary: { // Couleur secondaire
+        secondary: {
           100: "#d5fafa",
           200: "#abf5f5",
           300: "#82eff0",
@@ -32,9 +31,8 @@ module.exports = {
           600: "#25b7b8",
           700: "#1c898a",
           800: "#125c5c",
-          900: "#092e2e"
         },
-        text: { 
+        text: {
           100: "#d6d6d6",
           200: "#adadad",
           300: "#858585",
@@ -43,7 +41,6 @@ module.exports = {
           600: "#292929",
           700: "#1f1f1f",
           800: "#141414",
-          900: "#0a0a0a"
         },
         buttonColor: {
           100: "#d5e3fa",
@@ -54,15 +51,13 @@ module.exports = {
           600: "#255ab8",
           700: "#1c448a",
           800: "#122d5c",
-          900: "#09172e"
         },
-        background: '#FFF', // Background
-        backgroundImage: {
-          'blue-to-white': 'linear-gradient(to bottom, #04A3EA, #FFFFFF)',
-        },
+        background: '#FFF', // Couleur de fond
+      },
+      backgroundImage: {
+        'blue-to-white': 'linear-gradient(to bottom, #04A3EA, #FFFFFF)', // Dégradé bleu à blanc
       },
     },
   },
   plugins: [],
-}
-
+};
