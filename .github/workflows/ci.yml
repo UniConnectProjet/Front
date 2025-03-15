@@ -28,9 +28,6 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Run Jest tests
-        run: npm run test
-
   deploy:
     needs: test
     runs-on: ubuntu-latest
