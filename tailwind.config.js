@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+/* eslint-disable no-undef */  // 🚀 Ignore l'erreur "no-undef"
+
 module.exports = {
   content: ["./src/**/*.{html,js,jsx,ts,tsx}"], // Inclut tous les fichiers React
   theme: {
