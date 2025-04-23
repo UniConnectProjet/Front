@@ -1,11 +1,10 @@
 import React from 'react';
-import { Authentification } from './components/organisms';
+import Router from './AppRouter';
 
 function App() {
   return (
-      <div className="h-screen bg-background flex flex-col justify-center items-center">
-        
-        <Authentification/>
+      <div className="h-screen bg-background">
+        <Router />
       </div>
   );
 }
