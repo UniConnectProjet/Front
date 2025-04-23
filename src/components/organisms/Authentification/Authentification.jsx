@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Form, LogoFond } from "../../molecules";
 
-const Authentification = ({ className }) => {
+const Authentification = ({ className = '' }) => {
   return (
     <div className={`flex flex-row h-screen w-screen ${className}`}>
       <LogoFond />
@@ -14,11 +14,6 @@ const Authentification = ({ className }) => {
 // Validation des props
 Authentification.propTypes = {
   className: PropTypes.string,
-};
-
-// Valeurs par défaut
-Authentification.defaultProps = {
-  className: "",
 };
 
 export default Authentification;

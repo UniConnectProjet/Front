@@ -6,6 +6,6 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+RUN npm install axios react-router-dom nodemon
 
-CMD ["npm", "start"]
+COPY . .
