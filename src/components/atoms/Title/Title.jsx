@@ -1,9 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const Title = ({ text, children, ...props }) => {
+const Title = ({ 
+  text = '', 
+  children = null, 
+  className = 'text-title',
+  ...props 
+}) => {
   return (
-    <h1 className='text-title' {...props}>
+    <h1 className={className} {...props}>
       {text || children}
     </h1>
   );
@@ -13,12 +18,7 @@ const Title = ({ text, children, ...props }) => {
 Title.propTypes = {
   text: PropTypes.string, // text est une chaîne optionnelle
   children: PropTypes.node, // children peut être n'importe quel élément React
-};
-
-// Valeurs par défaut
-Title.defaultProps = {
-  text: '', // Par défaut, texte vide
-  children: null, // Pas de contenu par défaut
+  className: PropTypes.string, // permet de personnaliser les classes
 };
 
 export default Title;
