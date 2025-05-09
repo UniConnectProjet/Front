@@ -5,7 +5,7 @@ import { Title, OverallAverage } from "../../atoms";
 const GradeGrid = ({ grades }) => {
     return (
         <div className="flex flex-col p-4 w-3/5 bg-gray-100 rounded-lg shadow-md ml-20">
-            <Title className=" text-black text-lg">Notes : </Title>
+            <Title className=" text-buttonColor-500 text-lg">Notes : </Title>
             <div className="grid grid-cols-2">
                 {grades.map((grade, index) => (
                     <GradeCard

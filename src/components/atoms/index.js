@@ -5,5 +5,6 @@ import Image from "./Image/Image";
 import Grade from "./Grade/Grade";
 import Average from "./Average/Average";
 import OverallAverage from "./OverallAverage/OverallAverage";
+import Text from "./Text/Text";
 
-export { Button, Input, Title, Image, Grade, Average, OverallAverage };
+export { Button, Input, Title, Image, Grade, Average, OverallAverage, Text };
