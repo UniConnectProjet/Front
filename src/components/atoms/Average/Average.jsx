@@ -5,10 +5,10 @@ const Average = ({ score, titleAverage, total, className = ''}) => {
     return (
         <div className={className}>
             <div className="flex items-center">
-                <div class="items-center bg-primary-400 rounded-xl px-1 py-1 mr-1"></div>
+                <div class="items-center bg-primary-400 rounded-xl p-1 mr-2"></div>
                 <span className="text-sm font-bold text-gray-800">{titleAverage}</span>
             </div>
-            <span className="text-sm font-bold text-gray-800 bg-primary-400 rounded-lg p-1">{score}/{total}</span>
+            <span className="text-sm font-bold text-white bg-primary-400 rounded-lg p-1">{score}/{total}</span>
         </div>
     );
 };
