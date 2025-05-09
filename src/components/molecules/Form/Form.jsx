@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { Button, Input, Title } from '../../atoms';
 import userIcon from '../../../assets/svg/user.svg';
@@ -11,6 +12,7 @@ const Form = ({ className = '' }) => {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         if (e) e.preventDefault();
@@ -40,7 +42,7 @@ const Form = ({ className = '' }) => {
                 const userId = userResponse.data.id;
                 console.log("ID de l'utilisateur:", userId);
                 // Rediriger vers la page d'accueil avec l'ID utilisateur
-                window.location.href = `/home/${userId}`;
+                navigate(`/home/${userId}`);
             })
             .catch(error => {
                 console.error("Erreur lors de la récupération de l'ID de l'utilisateur:", error);
