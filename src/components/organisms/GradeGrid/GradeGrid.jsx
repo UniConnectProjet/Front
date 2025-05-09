@@ -4,9 +4,9 @@ import { Title } from "../../atoms";
 
 const GradeGrid = ({ grades }) => {
     return (
-        <div className="flex flex-col gap-4 p-4 bg-gray-100">
+        <div className="flex flex-col p-4 w-2/3 bg-gray-100 rounded-lg shadow-md ml-20">
             <Title className=" text-black text-lg">Notes : </Title>
-            <div className="flex grid grid-cols-2 ">
+            <div className="grid grid-cols-2">
                 {grades.map((grade, index) => (
                     <GradeCard
                         key={index}

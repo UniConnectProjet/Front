@@ -5,15 +5,26 @@ const Home = () => {
     return (
         <div className="flex">
             <SideBar />
+            <div className='flex-1 bg-white p-10'>
             <GradeGrid
                 grades={[
                     { title: 'Math', score: 85, total: 100 },
                     { title: 'Science', score: 90, total: 100 },
                     { title: 'History', score: 78, total: 100 },
                     { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
+                    { title: 'English', score: 88, total: 100 },
                 ]}
                 className="bg-gray-100"
             />
+            </div>
         </div>
     );
 };
