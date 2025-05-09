@@ -37,20 +37,24 @@ const Menu = ({ className = '' }) => {
     };
 
     return (
-        <div className={`flex flex-col ${className}`}>
+        <div className={`flex flex-col ${className} space-between items-center justify-between h-full shadow-lg rounded-lg`}>
             <Image src={Icon} alt="Logo" />
-            <Button className={`menu-button ${activeButton === 'accueil' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('accueil')}>
-                <img src={accueilIcon} alt="Accueil" className="w-8 h-8" />
-            </Button>
-            <Button className={`menu-button ${activeButton === 'timetable' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('timetable')}>
-                <img src={timetableIcon} alt="Emploi du temps" className="w-8 h-8" />
-            </Button>
-            <Button className={`menu-button ${activeButton === 'chat' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('chat')}>
-                <img src={chatIcon} alt="Chat" className="w-8 h-8" />
-            </Button>
-            <Button className={`menu-button ${activeButton === 'missing' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('missing')}>
-                <img src={missingIcon} alt="Absences" className="w-8 h-8" />
-            </Button>
+
+            <div className="mb-4">
+                <Button className={`menu-button ${activeButton === 'accueil' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('accueil')}>
+                    <img src={accueilIcon} alt="Accueil" className="w-8 h-8" />
+                </Button>
+                <Button className={`menu-button ${activeButton === 'timetable' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('timetable')}>
+                    <img src={timetableIcon} alt="Emploi du temps" className="w-8 h-8" />
+                </Button>
+                <Button className={`menu-button ${activeButton === 'chat' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('chat')}>
+                    <img src={chatIcon} alt="Chat" className="w-8 h-8" />
+                </Button>
+                <Button className={`menu-button ${activeButton === 'missing' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('missing')}>
+                    <img src={missingIcon} alt="Absences" className="w-8 h-8" />
+                </Button>
+            </div>
+
             <Button className={`menu-button ${activeButton === 'logout' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('logout')}>
                 <img src={logoutIcon} alt="Déconnexion" className="w-8 h-8" />
             </Button>
