@@ -13,6 +13,8 @@ const OverallAverage = ({ score, titleOverallAverage, total, className = ''}) =>
 };
 
 OverallAverage.propTypes = {
+    titleOverallAverage: PropTypes.string.isRequired,
+    className: PropTypes.string,
     score: PropTypes.number.isRequired,
     total: PropTypes.number.isRequired,
 };
