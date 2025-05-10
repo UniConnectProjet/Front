@@ -1,5 +1,5 @@
 import React from 'react';
-import { SideBar, GradeGrid, UnjustifiedAbsences, Header } from '../../components/organisms';
+import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses } from '../../components/organisms';
 
 const Home = () => {
     return (
@@ -26,14 +26,34 @@ const Home = () => {
                         ]}
                         className="bg-gray-100"
                     />
-                    <UnjustifiedAbsences
-                        absences={[
-                            { title: 'Absence 1', date: '2023-10-01' },
-                            { title: 'Absence 2', date: '2023-10-02' },
-                            { title: 'Absence 3', date: '2023-10-03' },
-                        ]}
-                        className="bg-gray-100"
-                    />
+                    <div className="flex flex-col px-20 w-2/5">
+                        <NextDayCourses
+                            events={[
+                                {
+                                    id: '1',
+                                    title: 'Full Stack',
+                                    start: '2025-05-16T08:00:00',
+                                    end: '2025-05-16T12:00:00',
+                                    extendedProps: {
+                                        professor: 'Mme Perez',
+                                        location: 'Salle 023',
+                                    },
+                                },
+                                {
+                                    id: '2',
+                                    title: 'Full Stack',
+                                    start: '2025-05-16T16:00:00',
+                                    end: '2025-05-16T18:00:00',
+                                    extendedProps: {
+                                        professor: 'Mme Perez',
+                                        location: 'Salle 023',
+                                    },
+                                },
+                            ]}  
+                            className="bg-gray-100"
+                        />
+                        <UnjustifiedAbsences/>
+                    </div>
                 </div>
             </div>
         </div>

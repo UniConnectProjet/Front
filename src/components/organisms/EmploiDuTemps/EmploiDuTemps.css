@@ -1,0 +1,8 @@
+/* Annule les styles par défaut de FullCalendar */
+.fc-event {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+  

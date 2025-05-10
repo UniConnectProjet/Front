@@ -11,7 +11,7 @@ const UnjustifiedAbsences = () => {
     ];
 
     return (
-        <div className="flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ml-10 w-2/5 max-h-fit">   
+        <div className="flex flex-col p-4 bg-gray-100 rounded-lg shadow-md max-h-fit">   
             <Title className="text-buttonColor-500 text-lg">Absences : </Title>
             {absences.map((absence, index) => (
                 <Absence key={index} title={absence.title} date={absence.date} />
