@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Grade, Average } from '../../atoms';
 
 const GradeCard = ({ title, score, total, className = '' }) => {
@@ -14,6 +15,13 @@ const GradeCard = ({ title, score, total, className = '' }) => {
         </div>
     );
 }
+
+GradeCard.propTypes = {
+    title: PropTypes.string.isRequired,
+    score: PropTypes.number.isRequired,
+    total: PropTypes.number.isRequired,
+    className: PropTypes.string,
+};
 
 export default GradeCard;
 

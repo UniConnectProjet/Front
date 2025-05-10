@@ -11,6 +11,8 @@ const Grade = ({ score, titleGrade, total, className = ''}) => {
 };
 
 Grade.propTypes = {
+    titleGrade: PropTypes.string.isRequired,
+    className: PropTypes.string,
     score: PropTypes.number.isRequired,
     total: PropTypes.number.isRequired,
 };

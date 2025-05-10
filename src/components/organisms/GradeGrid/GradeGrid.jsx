@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { GradeCard } from "../../molecules";
 import { Title, OverallAverage } from "../../atoms";
 
@@ -24,5 +25,15 @@ const GradeGrid = ({ grades }) => {
         </div>
     );
 }
+
+GradeGrid.propTypes = {
+    grades: PropTypes.arrayOf(
+        PropTypes.shape({
+            title: PropTypes.string.isRequired,
+            score: PropTypes.number.isRequired,
+            total: PropTypes.number.isRequired,
+        })
+    ).isRequired,
+};
 
 export default GradeGrid;

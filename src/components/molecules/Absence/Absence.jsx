@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Text, Title, Image } from "../../atoms";
 import clock from "../../../assets/svg/clock.svg";
 
@@ -13,5 +14,11 @@ const Absence = ({ title, date, className = '' }) => {
         </div>
     );
 }
+
+Absence.propTypes = {
+    title: PropTypes.string.isRequired,
+    date: PropTypes.string.isRequired,
+    className: PropTypes.string,
+};
 
 export default Absence;

@@ -62,4 +62,8 @@ const Menu = ({ className = '' }) => {
     );
 }
 
+Menu.propTypes = {
+    className: PropTypes.string,
+};
+
 export default Menu;
