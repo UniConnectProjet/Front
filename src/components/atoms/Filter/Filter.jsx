@@ -20,6 +20,9 @@ const Filter = ({ titlePrev, titleToday, titleNext, onPrev, onNext, onToday, cla
 
 Filter.propTypes = {
     onPrev: PropTypes.func.isRequired,
+    titlePrev: PropTypes.string.isRequired,
+    titleNext: PropTypes.string.isRequired,
+    titleToday: PropTypes.string.isRequired,
     onNext: PropTypes.func.isRequired,  
     onToday: PropTypes.func.isRequired,
     title: PropTypes.string.isRequired,

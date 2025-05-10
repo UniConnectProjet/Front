@@ -1,6 +1,5 @@
 // src/pages/PlanningPage.jsx
 import React, { useRef, useState } from "react";
-import { CalendarToolbar } from "../../components/molecules";
 import { EmploiDuTemps, SideBar } from "../../components/organisms";
 
 // Exemple de données statiques (à remplacer plus tard par un fetch API)
@@ -90,8 +89,7 @@ const mockEvents = [
 
 const PlanningPage = () => {
   const calendarRef = useRef(null);
-  const [group, setGroup] = useState("groupe1");
-  const [dateLabel, setDateLabel] = useState("");
+  const [setDateLabel] = useState("");
 
   // Quand la vue change de semaine, met à jour le label
   const handleDatesSet = (info) => {
