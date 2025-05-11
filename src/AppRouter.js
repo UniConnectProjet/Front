@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Login from './pages/Login/Login';
 import Home from './pages/Home/Home';
 import Planning from './pages/Planning/Planning';
+import Absences from './pages/Absences/Absences';
 
 const AppRouter = () => {
     return (
@@ -12,6 +13,7 @@ const AppRouter = () => {
                 <Route path="/" element={<Login />} />
                 <Route path="/home/:userId" element={<Home />} />
                 <Route path="/planning/:classeid" element={<Planning />} />
+                <Route path="/absences/:userid" element={<Absences />} />
             </Routes>
         </BrowserRouter>
     );
