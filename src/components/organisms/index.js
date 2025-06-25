@@ -5,5 +5,6 @@ import UnjustifiedAbsences from "./UnjustifiedAbsences/UnjustifiedAbsences";
 import Header from "./Header/Header";
 import EmploiDuTemps from "./EmploiDuTemps/EmploiDuTemps";
 import NextDayCourses from "./NextDayCourses/NextDayCourses";
+import InjustifiedAbsences from "./InjustifiedAbsences/InjustifiedAbsences";
 
-export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses };
+export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses, InjustifiedAbsences };
