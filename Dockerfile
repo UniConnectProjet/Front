@@ -14,3 +14,8 @@ RUN npm install
 RUN npm install axios react-router-dom nodemon --legacy-peer-deps
 
 COPY . .
+
+RUN npm run build
+RUN npm install -g serve
+
+CMD ["serve", "-s", "build", "-l", "80"]
