@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, InjustifiedAbsences } from "../../components/organisms";
-import { Menu, X } from "lucide-react"; // Ou un autre menu si tu veux
+import { Menu, X } from "lucide-react";
 
 const Absences = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,7 +18,6 @@ const Absences = () => {
         <SideBar />
       </div>
 
-      {/* OVERLAY NOIR */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
@@ -26,9 +25,7 @@ const Absences = () => {
         />
       )}
 
-      {/* MAIN CONTENT */}
       <div className="flex flex-col w-full h-screen overflow-x-hidden">
-        {/* BARRE SUP MOBILE */}
         <div className="md:hidden flex items-center justify-between p-4 bg-white shadow z-30">
           <button onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X size={28} /> : <Menu size={28} />}

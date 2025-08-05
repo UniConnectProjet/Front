@@ -1,17 +1,36 @@
-// organisms/EmploiDuTemps.jsx
-import React from "react";
-import PropTypes from "prop-types";
+import React, { useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { EventCard } from "../../atoms";
-import "./EmploiDuTemps.css"; // Assuming you have some CSS for styling
+import { WeekdayHeader } from "../../molecules";
 
 const EmploiDuTemps = ({ events }) => {
+  const calendarRef = useRef(null);
+  const [calendarView, setCalendarView] = useState(getInitialView());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  function getInitialView() {
+    return window.innerWidth < 768 ? "timeGridDay" : "timeGridWeek";
+  }
+
+  useEffect(() => {
+    const handleResize = () => {
+      const newView = getInitialView();
+      if (newView !== calendarView) setCalendarView(newView);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [calendarView]);
+
+  const handleDateChange = (newDate) => {
+    setSelectedDate(newDate);
+    calendarRef.current?.getApi().gotoDate(newDate);
+  };
+
   const renderEventContent = (eventInfo) => {
     const { title, extendedProps } = eventInfo.event;
-
     return (
       <EventCard
         title={title}
@@ -22,34 +41,25 @@ const EmploiDuTemps = ({ events }) => {
   };
 
   return (
-    <FullCalendar
-      plugins={[timeGridPlugin, interactionPlugin]}
-      initialView="timeGridWeek"
-      locale={frLocale}
-      firstDay={1}
-      allDaySlot={false}
-      slotMinTime="08:00:00"
-      slotMaxTime="20:00:00"
-      events={events}
-      eventContent={renderEventContent}
-      height="auto"
-    />
+    <div className="overflow-x-auto w-full">
+      <WeekdayHeader selectedDate={selectedDate} onSelect={handleDateChange} />
+      <FullCalendar
+        key={calendarView}
+        ref={calendarRef}
+        plugins={[timeGridPlugin, interactionPlugin]}
+        initialView={calendarView}
+        initialDate={selectedDate}
+        locale={frLocale}
+        firstDay={1}
+        allDaySlot={false}
+        slotMinTime="08:00:00"
+        slotMaxTime="20:00:00"
+        events={events}
+        eventContent={renderEventContent}
+        height="auto"
+      />
+    </div>
   );
 };
-
-EmploiDuTemps.propTypes = {
-    events: PropTypes.arrayOf(
-        PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        title: PropTypes.string.isRequired,
-        start: PropTypes.string.isRequired,
-        end: PropTypes.string.isRequired,
-        extendedProps: PropTypes.shape({
-            professor: PropTypes.string,
-            location: PropTypes.string,
-        }),
-        })
-    ).isRequired,
-};  
 
 export default EmploiDuTemps;
