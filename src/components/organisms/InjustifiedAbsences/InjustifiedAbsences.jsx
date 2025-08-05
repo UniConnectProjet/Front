@@ -23,16 +23,16 @@ const InjustifiedAbsences = () => {
     ];
 
     return (
-        <div className="flex flex-col p-4 ml-20 w-full">   
+        <div className="flex flex-col px-4 md:px-8 lg:ml-20 w-full max-w-screen-lg mx-auto">  
             <Title>Absences</Title>
             <Select
-                className="mb-4 w-1/4"
+                className="mb-4 w-full sm:w-1/2 md:w-1/4"
                 options={options}
                 onChange={handleSelectChange}
                 value={selectedValue}
             />
-            <div className="flex p-4 justify-between">
-                <div className="flex flex-col p-2 mr-4 bg-gray-100 rounded-lg shadow-md max-h-fit w-2/3">
+            <div className="flex flex-col lg:flex-row gap-4 p-4">
+                <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md w-full lg:w-1/3">
                     {absences.map((absence, index) => (
                         <AbsenceJustification key={index} justification={absence.justification} title={absence.title} date={absence.date} hours={absence.hours} />
                     ))}
