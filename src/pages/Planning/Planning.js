@@ -1,6 +1,12 @@
 // src/pages/PlanningPage.jsx
-import React, { useRef, useState } from "react";
-import { EmploiDuTemps, SideBar } from "../../components/organisms";
+import React, { useRef, lazy, Suspense, useEffect, useState } from "react";
+
+const EmploiDuTemps = lazy(() =>
+  import("../../components/organisms").then(m => ({ default: m.EmploiDuTemps }))
+);
+const SideBar = lazy(() =>
+  import("../../components/organisms").then(m => ({ default: m.SideBar }))
+);
 
 // Exemple de données statiques (à remplacer plus tard par un fetch API)
 const mockEvents = [
@@ -90,31 +96,44 @@ const mockEvents = [
 const PlanningPage = () => {
   const calendarRef = useRef(null);
   const [setDateLabel] = useState("");
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  useEffect(() => {
+    const id =
+      "requestIdleCallback" in window
+        ? window.requestIdleCallback(() => setShowCalendar(true))
+        : setTimeout(() => setShowCalendar(true), 0);
+    return () =>
+      "cancelIdleCallback" in window ? window.cancelIdleCallback(id) : clearTimeout(id);
+  }, []);
 
   // Quand la vue change de semaine, met à jour le label
   const handleDatesSet = (info) => {
     const start = new Date(info.start);
     const end = new Date(info.end);
-    const format = (date) =>
-      date.toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-      });
+    const format = (d) =>
+      d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
     setDateLabel(`Semaine du ${format(start)} au ${format(end)}`);
   };
 
   return (
     <div className="flex">
+      <Suspense fallback={null}>
         <SideBar />
-        <div className="p-6 ml-20">
-        <h1 className="mb-1">Emploi du temps</h1>
+      </Suspense>
+      <div className="p-6 ml-20">
+      <h1 className="mb-1">Emploi du temps</h1>
 
-        <EmploiDuTemps
+      {showCalendar ? (
+        <Suspense fallback={null}>
+          <EmploiDuTemps
             ref={calendarRef}
             events={mockEvents}
             onDatesSet={handleDatesSet}
-        />
-        </div>
+          />
+        </Suspense>
+      ) : null}
+      </div>
     </div>
   );
 };

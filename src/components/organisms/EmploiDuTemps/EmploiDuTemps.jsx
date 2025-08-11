@@ -3,6 +3,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { EventCard } from "../../atoms";
@@ -23,8 +24,8 @@ const EmploiDuTemps = ({ events }) => {
 
   return (
     <FullCalendar
-      plugins={[timeGridPlugin, interactionPlugin]}
-      initialView="timeGridWeek"
+      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+      initialView="dayGridMonth"
       locale={frLocale}
       firstDay={1}
       allDaySlot={false}
