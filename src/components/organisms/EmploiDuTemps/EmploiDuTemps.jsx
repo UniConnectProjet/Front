@@ -59,6 +59,7 @@ const EmploiDuTemps = ({ events }) => {
         eventContent={renderEventContent}
         height="auto"
       />
+    </div>
   );
 };
 

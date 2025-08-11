@@ -154,6 +154,7 @@ const PlanningPage = () => {
            </div>
       </div>
     </div>
+    </div>
   );
 };
 
