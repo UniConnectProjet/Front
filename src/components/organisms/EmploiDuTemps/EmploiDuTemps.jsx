@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { EventCard } from "../../atoms";
@@ -41,13 +42,13 @@ const EmploiDuTemps = ({ events }) => {
   };
 
   return (
-    <div className="overflow-x-auto w-full">
+     <div className="overflow-x-auto w-full">
       <WeekdayHeader selectedDate={selectedDate} onSelect={handleDateChange} />
       <FullCalendar
         key={calendarView}
         ref={calendarRef}
-        plugins={[timeGridPlugin, interactionPlugin]}
-        initialView={calendarView}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
         initialDate={selectedDate}
         locale={frLocale}
         firstDay={1}
@@ -58,7 +59,6 @@ const EmploiDuTemps = ({ events }) => {
         eventContent={renderEventContent}
         height="auto"
       />
-    </div>
   );
 };
 
