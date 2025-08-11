@@ -5,4 +5,11 @@
     padding: 0 !important;
     box-shadow: none !important;
   }
+
+.fc .fc-col-header-cell {
+  min-width: 100px; /* réductible */
+}
+.fc .fc-timegrid-slot-label {
+  min-width: 40px;
+}
   

@@ -5,9 +5,10 @@ import { Title, OverallAverage } from "../../atoms";
 
 const GradeGrid = ({ grades }) => {
     return (
-        <div className="flex flex-col p-4 w-3/5 bg-gray-100 rounded-lg shadow-md ml-20">
-            <Title className=" text-buttonColor-500 text-lg">Notes : </Title>
-            <div className="grid grid-cols-2">
+        <div className="flex flex-col w-full lg:w-3/5 p-4 bg-gray-100 rounded-lg shadow-md">
+            <Title className="text-buttonColor-500 text-lg mb-2">Notes :</Title>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {grades.map((grade, index) => (
                     <GradeCard
                         key={index}
@@ -17,14 +18,18 @@ const GradeGrid = ({ grades }) => {
                     />
                 ))}
             </div>
-            <OverallAverage 
-                score="14"
-                titleOverallAverage="Moyenne générale :"
-                total="20"
-                className="flex justify-between items-center border p-2 bg-white border-primary-300"/>
+
+            <div className="mt-4">
+                <OverallAverage 
+                    score="14"
+                    titleOverallAverage="Moyenne générale :"
+                    total="20"
+                    className="flex justify-between items-center border p-2 bg-white border-primary-300"
+                />
+            </div>
         </div>
     );
-}
+};
 
 GradeGrid.propTypes = {
     grades: PropTypes.arrayOf(
