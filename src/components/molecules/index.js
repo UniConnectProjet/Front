@@ -4,5 +4,6 @@ import Menu from "./Menu/Menu";
 import GradeCard from "./GradeCard/GradeCard";
 import Absence from "./Absence/Absence";
 import AbsenceJustification from "./AbsenceJustification/AbsenceJustification";
+import WeekdayHeader from "./WeekdayHeader/WeekdayHeader";
 
-export { Form, LogoFond, Menu, GradeCard, Absence, AbsenceJustification };
+export { Form, LogoFond, Menu, GradeCard, Absence, AbsenceJustification, WeekdayHeader };

@@ -67,34 +67,36 @@ const Form = ({ className = '' }) => {
         });
     };
 
-    return (
-        <form onSubmit={handleSubmit} className={`h-screen w-2/3 bg-background flex flex-col justify-center items-center ${className}`}>
-            <Title className="text-primary-500">Se Connecter</Title>
-            <Input 
-                type="text" 
-                icon={userIcon} 
-                placeholder="Email" 
-                className="px-7 py-2 border-b-2 border-primary-500 text-primary-500 font-poppins text-subtitle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-            />
-            <Input 
-                type="password" 
-                icon={passwordIcon} 
-                placeholder="Mot de passe" 
-                className="px-7 py-2 border-b-2 border-primary-500 text-primary-500 font-poppins text-subtitle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)}  
-            />
-            <Button 
-                type="submit"
-                className="px-5 py-1 bg-primary-500 text-white font-poppins text-subtitle rounded-full hover:bg-primary-600 transition duration-300" 
-                onClick={handleLogin}
-                disabled={isLoading}
-            >
-                {isLoading ? "Connexion en cours..." : "Se connecter"}
-            </Button>
-            {error && <p className="mt-3 text-red-500">{error}</p>}
+     return (
+        <form onSubmit={handleSubmit} className={`w-full md:w-1/2 h-full flex flex-col justify-center items-center p-6 bg-background ${className}`}>
+            <Title className="text-primary-500 text-2xl md:text-4xl mb-6">Se Connecter</Title>
+            <div className="w-full max-w-sm space-y-4">
+                <Input 
+                    type="text" 
+                    icon={userIcon} 
+                    placeholder="Email" 
+                    className="w-full px-7 py-2 border-b-2 border-primary-500 text-primary-500 font-poppins text-base md:text-subtitle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                />
+                <Input 
+                    type="password" 
+                    icon={passwordIcon} 
+                    placeholder="Mot de passe" 
+                    className="w-full px-7 py-2 border-b-2 border-primary-500 text-primary-500 font-poppins text-base md:text-subtitle focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}  
+                />
+                <Button 
+                    type="submit"
+                    className="w-full px-5 py-2 bg-primary-500 text-white font-poppins text-base md:text-subtitle rounded-full hover:bg-primary-600 transition duration-300" 
+                    onClick={handleLogin}
+                    disabled={isLoading}
+                >
+                    {isLoading ? "Connexion en cours..." : "Se connecter"}
+                </Button>
+                {error && <p className="text-red-500">{error}</p>}
+            </div>
         </form>
     );
 };
