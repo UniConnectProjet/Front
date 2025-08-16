@@ -42,7 +42,7 @@ const EmploiDuTemps = ({ events }) => {
   };
 
   return (
-     <div className="overflow-x-auto w-full">
+    <div className="overflow-x-auto w-full">
       <WeekdayHeader selectedDate={selectedDate} onSelect={handleDateChange} />
       <FullCalendar
         key={calendarView}
@@ -59,6 +59,7 @@ const EmploiDuTemps = ({ events }) => {
         eventContent={renderEventContent}
         height="auto"
       />
+    </div>
   );
 };
 

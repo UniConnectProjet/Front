@@ -135,23 +135,23 @@ const PlanningPage = () => {
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
-      
-      <div className="p-4 md:p-6 w-full overflow-x-auto">
-          <h1 className="hidden md:block text-2xl font-bold text-primary-500 mb-4">
-            Emploi du temps
-          </h1>
+        <div className="p-4 md:p-6 w-full overflow-x-auto">
+            <h1 className="hidden md:block text-2xl font-bold text-primary-500 mb-4">
+              Emploi du temps
+            </h1>
 
-          <div className="overflow-x-auto">
-            {showCalendar ? (
-              <Suspense fallback={null}>
-                <EmploiDuTemps
-                  ref={calendarRef}
-                  events={mockEvents}
-                  onDatesSet={handleDatesSet}
-                />
-              </Suspense>
-            ) : null}
-           </div>
+            <div className="overflow-x-auto">
+              {showCalendar ? (
+                <Suspense fallback={null}>
+                  <EmploiDuTemps
+                    ref={calendarRef}
+                    events={mockEvents}
+                    onDatesSet={handleDatesSet}
+                  />
+                </Suspense>
+              ) : null}
+            </div>
+        </div>
       </div>
     </div>
   );
