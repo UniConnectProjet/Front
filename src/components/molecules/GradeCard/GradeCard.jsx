@@ -11,10 +11,10 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
   const { id: idFromRoute } = useParams();
 
   // États affichés
-  const [scoreValue, setScoreValue] = useState(score ?? null);   // moyenne du cours (sur 20)
+  const [scoreValue, setScoreValue] = useState(score ?? null);  
   const [totalValue, setTotalValue] = useState(total ?? 20);
   const [titleGradeValue, setTitleGradeValue] = useState(title ?? '');
-  const [rows, setRows] = useState([]);                          // évaluations: [{label, score, total}]
+  const [rows, setRows] = useState([]);                         
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -46,7 +46,6 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
         setIsLoading(true);
         setError(null);
 
-        // ✅ bon endpoint qui renvoie { grades: [...] }
         const res = await axios.get(`${BASE_URL}/students/${studentId}/grades`, {
           headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
         });
@@ -54,20 +53,17 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
         const all  = Array.isArray(data?.grades) ? data.grades : [];
 
-        // On cible ce cours (case-insensitive)
         const lcTitle = String(title).toLowerCase();
         const matches = all.filter(
           g => String(g?.course?.name ?? '').toLowerCase() === lcTitle
         );
 
-        // Construit les lignes d'évaluations "titre  note/dividor"
         const evals = matches.map(g => ({
           label: g?.title ?? 'Évaluation',
           score: Number(g?.grade ?? 0),
           total: Number(g?.dividor ?? 20),
         }));
 
-        // Moyenne du cours: priorité à course.average (déjà /20), sinon moyenne calculée
         let avg20 = (matches[0]?.course?.average != null)
           ? Number(matches[0].course.average)
           : (evals.length
@@ -78,7 +74,6 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
 
         if (!cancelled) {
           setRows(evals);
-          // Si score/total fournis en props on les garde, sinon on prend ce qu'on a calculé
           if (score == null) setScoreValue(avg20);
           if (total == null) setTotalValue(20);
           setTitleGradeValue(title);
@@ -115,7 +110,6 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
             className="flex justify-between items-center pb-2 border-b border-black"
           />
 
-          {/* Liste des évaluations : "est 15/19" */}
           <div className="mt-2">
             {rows.map((r, i) => (
               <Grade
@@ -134,9 +128,9 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
 };
 
 GradeCard.propTypes = {
-  title: PropTypes.string.isRequired, // nom du cours (ex: "Programmation Web")
-  score: PropTypes.number,            // optionnel (si fourni, on garde la valeur)
-  total: PropTypes.number,            // optionnel
+  title: PropTypes.string.isRequired,
+  score: PropTypes.number,            
+  total: PropTypes.number,            
   idStudent: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   className: PropTypes.string,
 };
