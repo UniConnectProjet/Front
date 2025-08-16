@@ -41,6 +41,7 @@ const Form = ({ className = '' }) => {
             .then(userResponse => {
                 const userId = userResponse.data.id;
                 console.log("ID de l'utilisateur:", userId);
+                accountService.saveUserId(userId);
                 // Rediriger vers la page d'accueil avec l'ID utilisateur
                 navigate(`/home/${userId}`);
             })
