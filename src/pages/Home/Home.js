@@ -41,7 +41,7 @@ const Home = () => {
                     <GradeGrid className="bg-gray-100 w-full lg:w-3/5"/>
                      <div className="flex flex-col w-full lg:w-2/5 px-4 lg:px-20">
                         <NextDayCourses
-                            className="bg-gray-100"
+                            className="bg-gray-100 w-full mb-4"
                         />
                         <UnjustifiedAbsences/>
                     </div>
