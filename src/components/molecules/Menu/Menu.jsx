@@ -20,13 +20,13 @@ const Menu = ({ className = '' }) => {
                 navigate('/home');
                 break;
             case 'timetable':
-                navigate('/timetable');
+                navigate('/planning');
                 break;
             case 'chat':
                 navigate('/chat');
                 break;
             case 'missing':
-                navigate('/missing');
+                navigate('/absences');
                 break;
             case 'logout':
                 navigate('/');
