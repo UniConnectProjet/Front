@@ -6,7 +6,6 @@ import { Select } from "../../atoms";
 
 const BASE_URL = "http://localhost:8000/api";
 
-// Helper durée
 const durationHHMM = (startISO, endISO) => {
   if (!startISO || !endISO) return "—";
   const start = new Date(startISO);
@@ -53,10 +52,9 @@ const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
           },
         });
 
-        // ✅ gestion du JWT expiré
         if (res.status === 401) {
-          accountService.logout(); // supprime le token + redirige
-          window.location.reload(); // recharge pour forcer login
+          accountService.logout(); 
+          window.location.reload(); 
           return;
         }
 
@@ -91,7 +89,6 @@ const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
     return () => {
       mounted = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId, token]);
 
   const options = useMemo(
