@@ -4,7 +4,7 @@ import { Form, LogoFond } from "../../molecules";
 
 const Authentification = ({ className = '' }) => {
   return (
-    <div className={`flex flex-row h-screen w-screen ${className}`}>
+    <div className={`flex flex-col md:flex-row h-screen w-screen ${className}`}>
       <LogoFond />
       <Form />
     </div>
