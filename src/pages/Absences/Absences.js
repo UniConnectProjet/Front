@@ -3,18 +3,22 @@ import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, InjustifiedAbsences } from "../../components/organisms";
 import { Menu, X } from "lucide-react";
+import { accountService } from ".././../_services/account.service";
 
 const Absences = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const studentId = accountService.getStudentId();
 
   return (
     <div className="flex">
       {/* SIDEBAR RESPONSIVE */}
-      <div className={`
+      <div
+        className={`
         fixed z-50 md:static transition-transform duration-300 bg-white h-screen
-        ${menuOpen ? 'translate-x-0' : '-translate-x-full'} 
+        ${menuOpen ? "translate-x-0" : "-translate-x-full"} 
         md:translate-x-0 w-20
-      `}>
+      `}
+      >
         <SideBar />
       </div>
 
@@ -30,12 +34,22 @@ const Absences = () => {
           <button onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
-          <Image src={user} alt="User" className="w-10 h-10 rounded-full mx-auto md:hidden" />
+          <Image
+            src={user}
+            alt="User"
+            className="w-10 h-10 rounded-full mx-auto md:hidden"
+          />
         </div>
 
         {/* CONTENU */}
         <div className="flex flex-col w-full bg-white px-4 md:px-8 mt-4">
-          <InjustifiedAbsences />
+          {studentId ? (
+            <InjustifiedAbsences studentId={studentId} />
+          ) : (
+            <p className="text-red-600 text-sm">
+              Aucun identifiant étudiant trouvé — merci de vous reconnecter.
+            </p>
+          )}
         </div>
       </div>
     </div>
