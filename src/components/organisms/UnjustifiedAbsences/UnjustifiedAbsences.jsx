@@ -67,7 +67,6 @@ const UnjustifiedAbsences = ({ absences: absencesProp, studentId: studentIdProp,
         const raw = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
         const list = Array.isArray(raw?.absences) ? raw.absences : [];
 
-        console.log("Absences récupérées:", list);
         // on garde uniquement les injustifiées
         const unjustified = list
           .filter(a => a?.justified === false || String(a?.status ?? "").toLowerCase().includes("unjust"))

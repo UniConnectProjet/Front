@@ -1,103 +1,19 @@
-import React, { useRef, lazy, Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useCallback } from "react";
 import { Menu, X } from "lucide-react";
-
-const EmploiDuTemps = lazy(() =>
-  import("../../components/organisms").then(m => ({ default: m.EmploiDuTemps }))
-);
-const SideBar = lazy(() =>
-  import("../../components/organisms").then(m => ({ default: m.SideBar }))
-);
-
-// Exemple de données statiques (à remplacer plus tard par un fetch API)
-const mockEvents = [
-  {
-    id: "1",
-    title: "Full Stack",
-    start: "2025-08-16T08:00:00",
-    end: "2025-08-16T12:00:00",
-    extendedProps: {
-      professor: "Mme Perez",
-      location: "Salle 023",
-    },
-  },
-  {
-    id: "2",
-    title: "Full Stack",
-    start: "2025-08-16T16:00:00",
-    end: "2025-08-16T18:00:00",
-    extendedProps: {
-      professor: "Mme Perez",
-      location: "Salle 023",
-    },
-  },
-  {
-    id: "3",
-        title: "Full Stack",
-        start: "2025-08-12T08:00:00",
-        end: "2025-08-12T12:00:00",
-        extendedProps: {
-        professor: "Mme Perez",
-        location: "Salle 023",
-        },
-  },
-  {
-    id: "4",
-    title: "Full Stack",
-    start: "2025-08-12T14:00:00",
-    end: "2025-08-12T17:00:00",
-    extendedProps: {
-      professor: "Mme Perez",
-      location: "Salle 023",
-    },
-  },
-  {
-    id: "5",
-        title: "Full Stack",
-        start: "2025-08-13T08:00:00",
-        end: "2025-08-13T12:00:00",
-        extendedProps: {
-        professor: "Mme Perez",
-        location: "Salle 023",
-        },
-  },
-  {
-    id: "6",
-    title: "Full Stack",
-    start: "2025-08-13T14:00:00",
-    end: "2025-08-13T17:00:00",
-    extendedProps: {
-      professor: "Mme Perez",
-      location: "Salle 023",
-    },
-  },
-  {
-    id: "7",
-        title: "Full Stack",
-        start: "2025-08-14T08:00:00",
-        end: "2025-08-14T12:00:00",
-        extendedProps: {
-        professor: "Mme Perez",
-        location: "Salle 023",
-        },
-  },
-  {
-    id: "8",
-    title: "Full Stack",
-    start: "2025-08-14T14:00:00",
-    end: "2025-08-14T17:00:00",
-    extendedProps: {
-      professor: "Mme Perez",
-      location: "Salle 023",
-    },
-  },
-
-];
+import { useNavigate } from 'react-router-dom';
+import { api } from "../../_services/api";
+import { accountService } from "../../_services/account.service";
+import { EmploiDuTemps, SideBar } from "../../components/organisms";
 
 const PlanningPage = () => {
-  const calendarRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [setDateLabel] = useState("");
+  const [dateLabel, setDateLabel] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
+  const navigate = useNavigate();
+
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const id =
@@ -108,13 +24,57 @@ const PlanningPage = () => {
       "cancelIdleCallback" in window ? window.cancelIdleCallback(id) : clearTimeout(id);
   }, []);
 
-  const handleDatesSet = (info) => {
-    const start = new Date(info.start);
-    const end = new Date(info.end);
-    const format = (d) =>
-      d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
-    setDateLabel(`Semaine du ${format(start)} au ${format(end)}`);
-  };
+  const getStudentId = useCallback(async () => {
+    try {
+      const user = accountService.getUser?.();
+      const fromSession = user?.student?.id ?? user?.id ?? null;
+      if (fromSession) return fromSession;
+
+      const { data } = await api.get("/me/student");
+      return data?.id ?? null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleDatesSet = useCallback(async ({ start, end }) => {
+    if (!start || !end) return;
+
+    const fmt = (d) => d.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+    setDateLabel(`Semaine du ${fmt(start)} au ${fmt(new Date(end.getTime() - 86400000))}`);
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const studentId = await getStudentId();
+      if (!studentId) throw new Error("No student id");
+
+      const { data } = await api.get(`/students/${studentId}/schedule`, {
+        params: { from: start.toISOString(), to: end.toISOString() },
+      });
+
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (e) {
+      const status = e?.response?.status;
+      const payload = e?.response?.data;
+
+      console.error("Schedule error", status ?? e?.message, payload ?? "");
+
+      if (status === 404) {
+        setEvents([]);
+        setError("");
+      } else if (status === 401) {
+        setError("Session expirée. Reconnecte-toi.");
+        accountService.logout();
+        navigate('/');
+      } else {
+        setError("Impossible de charger l'emploi du temps.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [getStudentId]);
 
   return (
     <div className="flex">
@@ -127,7 +87,7 @@ const PlanningPage = () => {
           <SideBar />
         </Suspense>
       </div>
-      
+
       <div className="flex flex-col w-full">
         {/* Barre mobile */}
         <div className="md:hidden flex items-center justify-between p-4 bg-white shadow z-30">
@@ -135,22 +95,22 @@ const PlanningPage = () => {
             {menuOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
-        <div className="p-4 md:p-6 w-full overflow-x-auto">
-            <h1 className="hidden md:block text-2xl font-bold text-primary-500 mb-4">
-              Emploi du temps
-            </h1>
 
-            <div className="overflow-x-auto">
-              {showCalendar ? (
-                <Suspense fallback={null}>
-                  <EmploiDuTemps
-                    ref={calendarRef}
-                    events={mockEvents}
-                    onDatesSet={handleDatesSet}
-                  />
-                </Suspense>
-              ) : null}
-            </div>
+        <div className="p-4 md:p-6 w-full overflow-x-auto">
+          <h1 className="hidden md:block text-2xl font-bold text-primary-500 mb-1">
+            Emploi du temps
+          </h1>
+          {dateLabel && <div className="hidden md:block text-gray-600 mb-4">{dateLabel}</div>}
+          {error && <div className="text-red-600 mb-2">{error}</div>}
+          {loading && <div className="text-gray-500 mb-2">Chargement…</div>}
+
+          <div className="overflow-x-auto">
+            {showCalendar ? (
+              <Suspense fallback={null}>
+                <EmploiDuTemps events={events} onDatesSet={handleDatesSet} />
+              </Suspense>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
