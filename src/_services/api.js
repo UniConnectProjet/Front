@@ -1,8 +1,10 @@
-// src/_services/api.js
+/* eslint-env browser, node */
 import axios from "axios";
 
+const baseURL = process.env.REACT_APP_API_URL || "https://preprod.uni-connect.cloud/api";
+
 export const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8000/api",
+  baseURL,
   withCredentials: true,
 });
 
@@ -14,7 +16,6 @@ api.interceptors.response.use(
   async (error) => {
     const status = error?.response?.status;
     const cfg = error?.config || {};
-
     const hadSession = localStorage.getItem("had_session") === "1";
 
     if (status === 401 && hadSession && !cfg._retry) {
@@ -42,7 +43,6 @@ api.interceptors.response.use(
       }
     }
 
-    // Sinon, on remonte l'erreur telle quelle
     throw error;
   }
 );
