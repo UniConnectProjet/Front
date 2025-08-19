@@ -1,8 +1,6 @@
-// src/components/organisms/InjustifiedAbsences/InjustifiedAbsences.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { Title, Select } from "../../atoms";
 import { AbsenceJustification, Absence } from "../../molecules";
-import PropTypes from "prop-types";
 import { getAbsenceBlocks } from "../../../_services/student.service";
 
 const durationHHMM = (startISO, endISO) => {
@@ -23,12 +21,11 @@ const toBool = (v) =>
     : null;
 
 const InjustifiedAbsences = () => {
-  const [data, setData] = useState([]); // blocks by semester
+  const [data, setData] = useState([]); 
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
-  // Load blocks for the *current user* (cookie auth): /me/semesters/absences
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -132,5 +129,4 @@ const InjustifiedAbsences = () => {
   );
 };
 
-InjustifiedAbsences.propTypes = {};
 export default InjustifiedAbsences;

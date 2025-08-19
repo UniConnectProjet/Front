@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
-import { getAbsenceBlocks, getMyStudentId } from "../../../_services/student.service";
+import { getAbsenceBlocks } from "../../../_services/student.service";
 
 const toBool = (v) =>
   v === true || v === 1 || v === "1"
