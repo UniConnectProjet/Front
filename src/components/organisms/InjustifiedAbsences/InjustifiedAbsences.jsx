@@ -1,10 +1,8 @@
+// src/components/organisms/InjustifiedAbsences/InjustifiedAbsences.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Title } from "../../atoms";
+import { Title, Select } from "../../atoms";
 import { AbsenceJustification, Absence } from "../../molecules";
-import { accountService } from "../../../_services/account.service";
-import { Select } from "../../atoms";
-
-const BASE_URL = "http://localhost:8000/api";
+import { api } from "../../../_services/api";
 
 const durationHHMM = (startISO, endISO) => {
   if (!startISO || !endISO) return "—";
@@ -24,9 +22,6 @@ const toBool = (v) =>
     : null;
 
 const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
-  const studentId = studentIdProp ?? accountService.getStudentId();
-  const token = accountService.getToken();
-
   const [data, setData] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,62 +29,49 @@ const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      if (!studentId) {
-        setErr("studentId manquant");
-        setLoading(false);
-        return;
+
+    const resolveStudentId = async () => {
+      if (studentIdProp) return String(studentIdProp);
+      try {
+        const r = await api.get("/me/student");
+        return r?.data?.id ? String(r.data.id) : null;
+      } catch {
+        return null;
       }
+    };
+
+    (async () => {
       try {
         setLoading(true);
         setErr(null);
 
-        const url = `${BASE_URL}/student/${studentId}/semesters/absences`;
-        const res = await fetch(url, {
-          headers: {
-            Accept: "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-
-        if (res.status === 401) {
-          accountService.logout(); 
-          window.location.reload(); 
+        const sid = await resolveStudentId();
+        if (!sid) {
+          if (mounted) { setErr("Aucun étudiant identifié."); setLoading(false); }
           return;
         }
 
-        if (!res.ok) {
-          if (res.status === 404) {
-            if (mounted) {
-              setData([]);
-              setSelectedSemesterId(null);
-            }
-          } else {
-            const text = await res.text().catch(() => "");
-            throw new Error(`Erreur ${res.status} ${text}`);
-          }
-        } else {
-          const json = await res.json();
-          if (!mounted) return;
+        const url = `/students/${sid}/semesters/absences`;
+        const res = await api.get(url);
+        if (!mounted) return;
 
-          const arr = Array.isArray(json) ? json : [];
-          setData(arr);
+        const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+        const arr = Array.isArray(json) ? json : [];
+        setData(arr);
 
-          if (arr.length && !selectedSemesterId) {
-            setSelectedSemesterId(String(arr[0]?.semester?.id ?? ""));
-          }
+        if (arr.length && !selectedSemesterId) {
+          setSelectedSemesterId(String(arr[0]?.semester?.id ?? ""));
         }
       } catch (e) {
         console.error("[InjustifiedAbsences] API error:", e);
-        if (mounted) setErr(String(e.message || e));
+        if (mounted) setErr("Impossible de charger les absences.");
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [studentId, token]);
+
+    return () => { mounted = false; };
+  }, [studentIdProp]);
 
   const options = useMemo(
     () =>

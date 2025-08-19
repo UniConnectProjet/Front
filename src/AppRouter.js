@@ -1,22 +1,46 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { BrowserRouter } from 'react-router-dom';
-import Login from './pages/Login/Login';
-import Home from './pages/Home/Home';
-import Planning from './pages/Planning/Planning';
-import Absences from './pages/Absences/Absences';
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import Login from "./pages/Login/Login";
+import Home from "./pages/Home/Home";
+import Planning from "./pages/Planning/Planning";
+import Absences from "./pages/Absences/Absences";
+import PrivateRoute from "./auth/PrivateRoute";
+import Unauthorized from "./pages/Unauthorized";
 
-const AppRouter = () => {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Login />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/planning" element={<Planning />} />
-                <Route path="/absences" element={<Absences />} />
-            </Routes>
-        </BrowserRouter>
-    );
-};
+const AppRouter = () => (
+  <BrowserRouter>
+    <Routes>
+      {/* publique */}
+      <Route path="/" element={<Login />} />
+
+      {/* protégées (connecté) */}
+      <Route
+        path="/home"
+        element={
+          <PrivateRoute>
+            <Home />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/planning"
+        element={
+          <PrivateRoute roles={["ROLE_STUDENT"]}>
+            <Planning />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/absences"
+        element={
+          <PrivateRoute roles={["ROLE_STUDENT"]}>
+            <Absences />
+          </PrivateRoute>
+        }
+      />
+
+      <Route path="/unauthorized" element={<Unauthorized />} />
+    </Routes>
+  </BrowserRouter>
+);
 
 export default AppRouter;

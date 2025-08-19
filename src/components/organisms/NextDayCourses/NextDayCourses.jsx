@@ -1,8 +1,8 @@
+// src/components/organisms/NextDayCourses/NextDayCourses.jsx
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
 import { api } from "../../../_services/api";
-import { accountService } from "../../../_services/account.service";
 
 const EventRow = ({ title, start, end, professor, location }) => (
   <div className="bg-blue-100 p-3 mb-2 rounded">
@@ -16,7 +16,6 @@ const EventRow = ({ title, start, end, professor, location }) => (
         {[professor, location].filter(Boolean).join(" • ")}
       </span>
     </div>
-    
   </div>
 );
 
@@ -51,17 +50,10 @@ const NextDayCourses = ({ className = "" }) => {
     let ignore = false;
 
     const resolveStudentId = async () => {
-      const cached = accountService.getStudentId?.();
-      if (cached) return cached;
-
       try {
         const r = await api.get("/me/student");
-        const sid = r?.data?.id ?? null;
-        if (sid) accountService.saveStudentId?.(sid);
-        return sid;
-      } catch {
-        return null;
-      }
+        return r?.data?.id ?? null;
+      } catch { return null; }
     };
 
     (async () => {
@@ -118,9 +110,7 @@ const NextDayCourses = ({ className = "" }) => {
   return (
     <div className={`flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ${className}`}>
       <Title className="text-buttonColor-500 text-lg">Prochain cours :</Title>
-
       {error && <p className="text-red-600 text-sm">{error}</p>}
-
       {!error && events.map((e, i) => (
         <EventRow
           key={i}
@@ -131,7 +121,6 @@ const NextDayCourses = ({ className = "" }) => {
           location={e.extendedProps?.location}
         />
       ))}
-
       {!error && events.length === 0 && <p className="text-gray-500">Aucun cours prévu.</p>}
     </div>
   );

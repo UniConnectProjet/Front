@@ -1,55 +1,51 @@
+// src/components/molecules/GradeCard/GradeCard.jsx
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { Grade, Average } from '../../atoms';
-import { accountService } from '../../../_services/account.service';
-
-const BASE_URL = 'http://localhost:8000/api';
+import { api } from '../../../_services/api';
+import { useAuth } from '../../../auth/AuthProvider';
 
 const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
   const { id: idFromRoute } = useParams();
+  const { user } = useAuth();
 
-  // États affichés
-  const [scoreValue, setScoreValue] = useState(score ?? null);  
+  // états UI
+  const [scoreValue, setScoreValue] = useState(score ?? null);
   const [totalValue, setTotalValue] = useState(total ?? 20);
   const [titleGradeValue, setTitleGradeValue] = useState(title ?? '');
-  const [rows, setRows] = useState([]);                         
+  const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // id + token
-  const storedId  = accountService.getUserId ? accountService.getUserId() : null;
-  const tokenId   = accountService.getUserIdFromToken ? accountService.getUserIdFromToken() : null;
-  const studentId = idStudent ?? idFromRoute ?? storedId ?? tokenId ?? null;
-
-  const token =
-    (accountService.getToken ? accountService.getToken() : null) ||
-    (typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null);
+  // priorité: prop -> route -> user (si dispo) -> /me/student
+  const preferedId = idStudent ?? idFromRoute ?? user?.studentId ?? null;
 
   useEffect(() => {
-    if (!token) {
-      setError('Session absente ou expirée.');
-      setIsLoading(false);
-      return;
-    }
-    if (!studentId) {
-      setError("Aucun étudiant identifié.");
-      setIsLoading(false);
-      return;
-    }
-
     let cancelled = false;
 
-    (async () => {
+    const resolveStudentId = async () => {
+      if (preferedId) return String(preferedId);
       try {
-        setIsLoading(true);
-        setError(null);
+        const r = await api.get('/me/student');
+        return r?.data?.id ? String(r.data.id) : null;
+      } catch {
+        return null;
+      }
+    };
 
-        const res = await axios.get(`${BASE_URL}/students/${studentId}/grades`, {
-          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        });
+    (async () => {
+      setIsLoading(true);
+      setError(null);
 
+      const sid = await resolveStudentId();
+      if (!sid) {
+        if (!cancelled) { setError("Aucun étudiant identifié."); setIsLoading(false); }
+        return;
+      }
+
+      try {
+        const res = await api.get(`/me/grades`);
         const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
         const all  = Array.isArray(data?.grades) ? data.grades : [];
 
@@ -64,13 +60,17 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
           total: Number(g?.dividor ?? 20),
         }));
 
-        let avg20 = (matches[0]?.course?.average != null)
-          ? Number(matches[0].course.average)
-          : (evals.length
-              ? Number((
-                  evals.reduce((a, x) => a + (x.total ? x.score / x.total : 0), 0) / evals.length
-                * 20).toFixed(2))
-              : 0);
+        const avg20 =
+          matches[0]?.course?.average != null
+            ? Number(matches[0].course.average)
+            : (evals.length
+                ? Number(
+                    (
+                      evals.reduce((a, x) => a + (x.total ? x.score / x.total : 0), 0) /
+                      evals.length
+                    ) * 20
+                  .toFixed(2))
+                : 0);
 
         if (!cancelled) {
           setRows(evals);
@@ -87,7 +87,7 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
     })();
 
     return () => { cancelled = true; };
-  }, [studentId, token, title, score, total]);
+  }, [preferedId, title, score, total]);
 
   return (
     <div className={`flex flex-col w-2/3 p-2 ${className}`}>
@@ -97,19 +97,15 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
           <div className="animate-pulse h-16 bg-gray-100" />
         </>
       )}
-
       {!isLoading && error && <p className="text-red-600 text-sm">{error}</p>}
-
       {!isLoading && !error && (
         <>
-          {/* Bandeau du cours = moyenne /20 */}
           <Average
             score={Number(scoreValue ?? 0)}
             titleAverage={titleGradeValue || title}
             total={Number(totalValue ?? 20)}
             className="flex justify-between items-center pb-2 border-b border-black"
           />
-
           <div className="mt-2">
             {rows.map((r, i) => (
               <Grade
@@ -129,8 +125,8 @@ const GradeCard = ({ title, score, total, idStudent, className = '' }) => {
 
 GradeCard.propTypes = {
   title: PropTypes.string.isRequired,
-  score: PropTypes.number,            
-  total: PropTypes.number,            
+  score: PropTypes.number,
+  total: PropTypes.number,
   idStudent: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   className: PropTypes.string,
 };
