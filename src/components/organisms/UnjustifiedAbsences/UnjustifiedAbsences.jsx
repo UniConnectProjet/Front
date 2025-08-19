@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import axios from "axios";
 import { Title } from "../../atoms";
-import { accountService } from "../../../_services/account.service";
+import { api } from "../../../_services/api";
 
-const BASE_URL = "http://localhost:8000/api";
+const toBool = (v) => (v === true || v === 1 || v === "1") ? true
+  : (v === false || v === 0 || v === "0") ? false
+  : null;
 
 const Absence = ({ from, to }) => (
   <div className="flex flex-col p-2 bg-white rounded-md shadow-sm mb-2">
@@ -23,53 +24,42 @@ const UnjustifiedAbsences = ({ absences: absencesProp, studentId: studentIdProp,
 
   useEffect(() => {
     if (Array.isArray(absencesProp)) {
-      setAbsences(absencesProp);
-      setLoading(false);
-      setError(null);
+      setAbsences(absencesProp); setLoading(false); setError(null);
       return;
     }
 
     let ignore = false;
 
-    const token =
-      accountService.getToken?.() ||
-      (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
-
     const resolveStudentId = async () => {
-      const cached = studentIdProp ?? accountService.getStudentId?.();
-      if (cached) return cached;
+      if (studentIdProp) return String(studentIdProp);
       try {
-        const r = await axios.get(`${BASE_URL}/me/student`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const id = r?.data?.id ?? null;
-        if (id) accountService.saveStudentId?.(id);
-        return id;
-      } catch {
-        return null;
-      }
+        const r = await api.get("/me/student");           
+        return r?.data?.id ? String(r.data.id) : null;
+      } catch { return null; }
     };
 
     (async () => {
-      if (!token) { setError("Session absente ou expirée."); setLoading(false); return; }
-
       setLoading(true);
       setError(null);
 
       const sid = await resolveStudentId();
-      if (!sid) { setError("Aucun étudiant identifié."); setLoading(false); return; }
+      if (!sid) { if (!ignore) { setError("Aucun étudiant identifié."); setLoading(false); } return; }
 
       try {
-        const res = await axios.get(`${BASE_URL}/student/${sid}/absences`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const raw = await api.get(`/students/${sid}/semesters/absences`);
+        const payload = typeof raw.data === "string" ? JSON.parse(raw.data) : raw.data;
+        
+        const blocks = Array.isArray(payload) ? payload : (payload ? [payload] : []);
+        const allAbsences = blocks.flatMap(b => Array.isArray(b?.absences) ? b.absences : []);
 
-        const raw = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
-        const list = Array.isArray(raw?.absences) ? raw.absences : [];
-
-        // on garde uniquement les injustifiées
-        const unjustified = list
-          .filter(a => a?.justified === false || String(a?.status ?? "").toLowerCase().includes("unjust"))
+        // Garde uniquement les injustifiées
+        const unjustified = allAbsences
+          .filter(a => {
+            const j = toBool(a?.justified ?? a?.isJustified);
+            if (j === false) return true;
+            const status = String(a?.status ?? "").toLowerCase();
+            return status.includes("unjust");
+          })
           .map(a => ({
             from: a?.startedDate ?? a?.start ?? a?.date ?? null,
             to:   a?.endedDate   ?? a?.end   ?? null,
@@ -77,7 +67,10 @@ const UnjustifiedAbsences = ({ absences: absencesProp, studentId: studentIdProp,
 
         if (!ignore) setAbsences(unjustified);
       } catch (e) {
-        if (!ignore) setError("Impossible de charger les absences.");
+        if (!ignore) {
+          if (e?.response?.status === 404) { setAbsences([]); setError(null); }
+          else { setError("Impossible de charger les absences."); }
+        }
       } finally {
         if (!ignore) setLoading(false);
       }

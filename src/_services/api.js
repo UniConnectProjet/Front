@@ -1,22 +1,48 @@
+// src/_services/api.js
 import axios from "axios";
-import { accountService } from "./account.service";
 
 export const api = axios.create({
   baseURL: "http://localhost:8000/api",
+  withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
-  const token = accountService.getToken?.();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+let isRefreshing = false;
+let waiters = [];
 
 api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err?.response?.status === 401) {
-      console.warn("Session expirée");
+  (r) => r,
+  async (error) => {
+    const status = error?.response?.status;
+    const cfg = error?.config || {};
+
+    const hadSession = localStorage.getItem("had_session") === "1";
+
+    if (status === 401 && hadSession && !cfg._retry) {
+      cfg._retry = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          waiters.push({ resolve, reject, cfg });
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        await api.post("/token/refresh", {});
+        waiters.forEach(({ resolve, cfg: c }) => resolve(api(c)));
+        waiters = [];
+        return api(cfg);
+      } catch (e) {
+        localStorage.removeItem("had_session");
+        waiters.forEach(({ reject }) => reject(e));
+        waiters = [];
+        throw e;
+      } finally {
+        isRefreshing = false;
+      }
     }
-    return Promise.reject(err);
+
+    // Sinon, on remonte l'erreur telle quelle
+    throw error;
   }
 );
