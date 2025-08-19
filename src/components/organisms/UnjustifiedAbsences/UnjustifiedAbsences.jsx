@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
-import { api } from "../../../_services/api";
+import { getAbsenceBlocks, getMyStudentId } from "../../../_services/student.service";
 
-const toBool = (v) => (v === true || v === 1 || v === "1") ? true
-  : (v === false || v === 0 || v === "0") ? false
-  : null;
+const toBool = (v) =>
+  v === true || v === 1 || v === "1"
+    ? true
+    : v === false || v === 0 || v === "0"
+    ? false
+    : null;
 
 const Absence = ({ from, to }) => (
   <div className="flex flex-col p-2 bg-white rounded-md shadow-sm mb-2">
@@ -17,99 +20,68 @@ const Absence = ({ from, to }) => (
   </div>
 );
 
-const UnjustifiedAbsences = ({ absences: absencesProp, studentId: studentIdProp, className = "" }) => {
-  const [absences, setAbsences] = useState(Array.isArray(absencesProp) ? absencesProp : []);
-  const [loading, setLoading] = useState(!Array.isArray(absencesProp));
-  const [error, setError] = useState(null);
+Absence.propTypes = {
+  from: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+  to: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+};
+
+function pickDates(a = {}) {
+  const from =
+    a.from ?? a.startedDate ?? a.start ?? a.startAt ?? a.startedAt ?? a.dateStart ?? a.begin;
+  const to =
+    a.to ?? a.endedDate ?? a.end ?? a.endAt ?? a.endedAt ?? a.dateEnd ?? a.finish;
+  return { from, to };
+}
+
+export default function UnjustifiedAbsences({ absences: absencesProp, studentId, className = "" }) {
+  const [absences, setAbsences] = useState(absencesProp ?? []);
+  const [loading, setLoading] = useState(!absencesProp);
+  const [err, setErr] = useState(null);
 
   useEffect(() => {
-    if (Array.isArray(absencesProp)) {
-      setAbsences(absencesProp); setLoading(false); setError(null);
-      return;
-    }
-
     let ignore = false;
-
-    const resolveStudentId = async () => {
-      if (studentIdProp) return String(studentIdProp);
-      try {
-        const r = await api.get("/me/student");           
-        return r?.data?.id ? String(r.data.id) : null;
-      } catch { return null; }
-    };
+    if (absencesProp) return; // controlled via prop
 
     (async () => {
-      setLoading(true);
-      setError(null);
-
-      const sid = await resolveStudentId();
-      if (!sid) { if (!ignore) { setError("Aucun étudiant identifié."); setLoading(false); } return; }
-
       try {
-        const raw = await api.get(`/students/${sid}/semesters/absences`);
-        const payload = typeof raw.data === "string" ? JSON.parse(raw.data) : raw.data;
-        
-        const blocks = Array.isArray(payload) ? payload : (payload ? [payload] : []);
-        const allAbsences = blocks.flatMap(b => Array.isArray(b?.absences) ? b.absences : []);
+        setErr(null);
+        setLoading(true);
 
-        // Garde uniquement les injustifiées
-        const unjustified = allAbsences
-          .filter(a => {
-            const j = toBool(a?.justified ?? a?.isJustified);
-            if (j === false) return true;
-            const status = String(a?.status ?? "").toLowerCase();
-            return status.includes("unjust");
-          })
-          .map(a => ({
-            from: a?.startedDate ?? a?.start ?? a?.date ?? null,
-            to:   a?.endedDate   ?? a?.end   ?? null,
-          }));
-
-        if (!ignore) setAbsences(unjustified);
+        // Endpoint is cookie-scoped: /me/semesters/absences
+        // studentId is ignored, but we keep the prop for API symmetry
+        const blocks = await getAbsenceBlocks();
+        if (ignore) return;
+        const all = (Array.isArray(blocks) ? blocks : [])
+          .flatMap((b) => Array.isArray(b?.absences) ? b.absences : [])
+          .filter((a) => toBool(a?.justified ?? a?.isJustified) === false)
+          .map((a) => ({ ...a, ...pickDates(a) }));
+        setAbsences(all);
       } catch (e) {
-        if (!ignore) {
-          if (e?.response?.status === 404) { setAbsences([]); setError(null); }
-          else { setError("Impossible de charger les absences."); }
-        }
+        if (!ignore) setErr("Impossible de charger les absences.");
+        // eslint-disable-next-line no-console
+        console.error("[UnjustifiedAbsences] load error:", e);
       } finally {
         if (!ignore) setLoading(false);
       }
     })();
 
     return () => { ignore = true; };
-  }, [absencesProp, studentIdProp]);
+  }, [absencesProp, studentId]);
 
-  if (loading) {
-    return (
-      <div className={`flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ${className}`}>
-        <Title className="text-buttonColor-500 text-lg">Absences :</Title>
-        <div className="animate-pulse h-20 bg-gray-200 rounded-md mt-2" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ${className}`}>
-        <Title className="text-buttonColor-500 text-lg">Absences :</Title>
-        <p className="text-red-600 text-sm">{error}</p>
-      </div>
-    );
-  }
+  if (loading) return <p className="text-gray-500 text-sm">Chargement…</p>;
+  if (err) return <p className="text-red-600 text-sm">{err}</p>;
 
   return (
     <div className={`flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ${className}`}>
       <Title className="text-buttonColor-500 text-lg">Absences :</Title>
-      {(absences ?? []).map((a, i) => <Absence key={i} from={a.from} to={a.to} />)}
-      {absences.length === 0 && <p className="text-gray-500">Aucune absence injustifiée.</p>}
+      {(absences ?? []).map((a, i) => <Absence key={a.id ?? i} from={a.from} to={a.to} />)}
+      {(absences?.length ?? 0) === 0 && <p className="text-gray-500">Aucune absence injustifiée.</p>}
     </div>
   );
-};
+}
 
 UnjustifiedAbsences.propTypes = {
   absences: PropTypes.array,
   studentId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   className: PropTypes.string,
 };
-
-export default UnjustifiedAbsences;

@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
+import { useEffect, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -6,6 +7,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import frLocale from "@fullcalendar/core/locales/fr";
 import { EventCard } from "../../atoms";
 import { WeekdayHeader } from "../../molecules";
+import { PropTypes } from "prop-types";
 
 const EmploiDuTemps = ({ events, onDatesSet }) => {
   const calendarRef = useRef(null);
@@ -70,4 +72,8 @@ const EmploiDuTemps = ({ events, onDatesSet }) => {
   );
 };
 
+EmploiDuTemps.propTypes = {
+  events: PropTypes.oneOfType([PropTypes.array, PropTypes.func]),
+  onDatesSet: PropTypes.func,
+};
 export default EmploiDuTemps;

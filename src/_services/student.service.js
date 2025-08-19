@@ -13,3 +13,9 @@ export async function getMyStudentId() {
     throw e;
   }
 }
+
+export async function getAbsenceBlocks() {
+  const r = await api.get("/me/semesters/absences");
+  const data = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+  return Array.isArray(data) ? data : (data ? [data] : []);
+}

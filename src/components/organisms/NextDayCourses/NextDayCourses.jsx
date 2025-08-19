@@ -19,6 +19,14 @@ const EventRow = ({ title, start, end, professor, location }) => (
   </div>
 );
 
+EventRow.propTypes = {
+  title: PropTypes.string,
+  start: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+  end: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.instanceOf(Date)]),
+  professor: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  location: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+};
+
 const toJson = (raw) => (typeof raw === "string" ? (() => { try { return JSON.parse(raw); } catch { return null; } })() : raw);
 
 const normalizeEvents = (raw) => {
