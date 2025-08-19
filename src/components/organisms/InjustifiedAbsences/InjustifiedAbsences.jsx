@@ -2,7 +2,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Title, Select } from "../../atoms";
 import { AbsenceJustification, Absence } from "../../molecules";
-import { api } from "../../../_services/api";
+import PropTypes from "prop-types";
+import { getAbsenceBlocks } from "../../../_services/student.service";
 
 const durationHHMM = (startISO, endISO) => {
   if (!startISO || !endISO) return "—";
@@ -21,57 +22,39 @@ const toBool = (v) =>
     ? false
     : null;
 
-const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
-  const [data, setData] = useState([]);
+const InjustifiedAbsences = () => {
+  const [data, setData] = useState([]); // blocks by semester
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
+  // Load blocks for the *current user* (cookie auth): /me/semesters/absences
   useEffect(() => {
     let mounted = true;
-
-    const resolveStudentId = async () => {
-      if (studentIdProp) return String(studentIdProp);
-      try {
-        const r = await api.get("/me/student");
-        return r?.data?.id ? String(r.data.id) : null;
-      } catch {
-        return null;
-      }
-    };
-
     (async () => {
       try {
         setLoading(true);
         setErr(null);
-
-        const sid = await resolveStudentId();
-        if (!sid) {
-          if (mounted) { setErr("Aucun étudiant identifié."); setLoading(false); }
-          return;
-        }
-
-        const url = `/students/${sid}/semesters/absences`;
-        const res = await api.get(url);
+        const blocks = await getAbsenceBlocks();
         if (!mounted) return;
-
-        const json = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
-        const arr = Array.isArray(json) ? json : [];
-        setData(arr);
-
-        if (arr.length && !selectedSemesterId) {
-          setSelectedSemesterId(String(arr[0]?.semester?.id ?? ""));
-        }
+        setData(Array.isArray(blocks) ? blocks : []);
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error("[InjustifiedAbsences] API error:", e);
         if (mounted) setErr("Impossible de charger les absences.");
       } finally {
         if (mounted) setLoading(false);
       }
     })();
+    return () => void (mounted = false);
+  }, []);
 
-    return () => { mounted = false; };
-  }, [studentIdProp]);
+  // Select first semester by default when data arrives
+  useEffect(() => {
+    if (data.length) {
+      setSelectedSemesterId((prev) => prev ?? String(data[0]?.semester?.id ?? ""));
+    }
+  }, [data]);
 
   const options = useMemo(
     () =>
@@ -149,4 +132,5 @@ const InjustifiedAbsences = ({ studentId: studentIdProp }) => {
   );
 };
 
+InjustifiedAbsences.propTypes = {};
 export default InjustifiedAbsences;

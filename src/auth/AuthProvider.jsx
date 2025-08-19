@@ -1,10 +1,18 @@
+import React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../_services/api";
 import { refreshSession } from "../_services/auth.service";
+import { PropTypes } from "prop-types";
 
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
 
+AuthProvider.propTypes = {
+  children: PropTypes.node,
+};
+AuthConsumer.propTypes = {
+  children: PropTypes.func.isRequired,
+};
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoad] = useState(true);
@@ -39,3 +47,9 @@ export default function AuthProvider({ children }) {
     </AuthCtx.Provider>
   );
 }
+
+export function AuthConsumer({ children }) {
+  const auth = useAuth();
+  if (!auth) throw new Error("AuthConsumer must be used within AuthProvider");
+  return children(auth);
+} 

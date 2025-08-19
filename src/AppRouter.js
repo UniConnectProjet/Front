@@ -1,3 +1,4 @@
+import React from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import Login from "./pages/Login/Login";
 import Home from "./pages/Home/Home";
@@ -24,7 +25,7 @@ const AppRouter = () => (
       <Route
         path="/planning"
         element={
-          <PrivateRoute roles={["ROLE_STUDENT"]}>
+          <PrivateRoute>
             <Planning />
           </PrivateRoute>
         }
@@ -32,7 +33,7 @@ const AppRouter = () => (
       <Route
         path="/absences"
         element={
-          <PrivateRoute roles={["ROLE_STUDENT"]}>
+          <PrivateRoute>
             <Absences />
           </PrivateRoute>
         }
