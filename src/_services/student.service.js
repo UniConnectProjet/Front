@@ -7,7 +7,7 @@ function ensureJson(r) {
     String(r.headers?.["content-type"] || r.headers?.get?.("content-type") || "").toLowerCase();
   if (!ct.includes("json")) {
     const sample = typeof r.data === "string" ? r.data.slice(0, 200) : "";
-    const err = new Error("Réponse non-JSON reçue de l’API");
+    const err = new Error("Réponses non-JSON reçue de l’API");
     err.response = r;
     err.sample = sample;
     throw err;
