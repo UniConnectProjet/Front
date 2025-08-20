@@ -1,7 +1,7 @@
 /* eslint-env browser, node */
 import axios from "axios";
 
-const baseURL = process.env.REACT_APP_API_URL || "https://preprod.uni-connect.cloud/api";
+const baseURL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
 
 export const api = axios.create({
   baseURL,
@@ -11,38 +11,19 @@ export const api = axios.create({
 let isRefreshing = false;
 let waiters = [];
 
-api.interceptors.response.use(
-  (r) => r,
-  async (error) => {
-    const status = error?.response?.status;
-    const cfg = error?.config || {};
-    const hadSession = localStorage.getItem("had_session") === "1";
+// Toujours demander du JSON
+api.defaults.headers.common["Accept"] = "application/json";
+api.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 
-    if (status === 401 && hadSession && !cfg._retry) {
-      cfg._retry = true;
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          waiters.push({ resolve, reject, cfg });
-        });
-      }
-
-      isRefreshing = true;
-      try {
-        await api.post("/token/refresh", {});
-        waiters.forEach(({ resolve, cfg: c }) => resolve(api(c)));
-        waiters = [];
-        return api(cfg);
-      } catch (e) {
-        localStorage.removeItem("had_session");
-        waiters.forEach(({ reject }) => reject(e));
-        waiters = [];
-        throw e;
-      } finally {
-        isRefreshing = false;
-      }
-    }
-
-    throw error;
+// Intercepteur côté succès: rejeter les réponses HTML "cachées"
+api.interceptors.response.use((r) => {
+  const ct = String(r.headers?.["content-type"] || "").toLowerCase();
+  if (!ct.includes("json")) {
+    const sample = typeof r.data === "string" ? r.data.slice(0, 200) : "";
+    const err = new Error("Réponse non-JSON reçue (probable redirection vers HTML).");
+    err.response = r;
+    err.sample = sample;
+    throw err;
   }
-);
+  return r;
+}, (error) => Promise.reject(error));

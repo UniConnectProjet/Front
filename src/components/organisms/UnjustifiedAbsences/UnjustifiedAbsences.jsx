@@ -56,11 +56,16 @@ export default function UnjustifiedAbsences({ absences: absencesProp, studentId,
           .filter((a) => toBool(a?.justified ?? a?.isJustified) === false)
           .map((a) => ({ ...a, ...pickDates(a) }));
         setAbsences(all);
-      } catch (e) {
-        if (!ignore) setErr("Impossible de charger les absences.");
-        // eslint-disable-next-line no-console
-        console.error("[UnjustifiedAbsences] load error:", e);
-      } finally {
+      }catch (e) {
+          const looksHtml = typeof e?.sample === "string" && /<html|<!DOCTYPE|<br\s*\/?>/i.test(e.sample);
+          if (!ignore) {
+            setErr(looksHtml
+              ? "Session expirée ou accès refusé — veuillez vous reconnecter."
+              : "Impossible de charger les absences.");
+          }
+          console.error("[UnjustifiedAbsences] load error:", e);
+        } finally {
+
         if (!ignore) setLoading(false);
       }
     })();
