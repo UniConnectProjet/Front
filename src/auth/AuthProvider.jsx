@@ -31,7 +31,7 @@ export default function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    await api.post("/login_check", { username: email.trim(), password }); // cookies posés
+    await api.post("/login_check", { email: email.trim(), password }); // cookies posés
     const me = await api.get("/me/student");
     setUser(me.data ?? null);
   };
