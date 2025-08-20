@@ -8,9 +8,6 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-let isRefreshing = false;
-let waiters = [];
-
 // Toujours demander du JSON
 api.defaults.headers.common["Accept"] = "application/json";
 api.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";

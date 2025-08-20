@@ -3,7 +3,6 @@ import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../_services/api";
 import { EmploiDuTemps, SideBar } from "../../components/organisms";
-import { getMyStudentId } from "../../_services/student.service";
 
 export default function Planning() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -29,14 +28,37 @@ export default function Planning() {
 
     try {
       setLoading(true); setError("");
-      const studentId = await getMyStudentId();
-      if (!studentId) throw new Error("No student id");
-
-      const { data } = await api.get(`/students/${studentId}/schedule`, {
-        params: { from: start.toISOString(), to: end.toISOString() },
-      });
-      setEvents(Array.isArray(data) ? data : []);
-    } catch (e) {
+      const params = {
+        from: start.toISOString(), to: end.toISOString(),
+        start: start.toISOString(), end: end.toISOString(),
+      };
+      let data;
+      try {
+        ({ data } = await api.get("/me/schedule", { params }));
+      } catch (e1) {
+        const status = e1?.response?.status;
+        if (status === 404 || status === 405 || status === 500 || status === 501) {
+          const me = await api.get("/me/student");
+          const sid = me?.data?.id;
+          if (!sid) throw e1;
+          ({ data } = await api.get(`/students/${sid}/schedule`, { params }));
+        } else {
+          throw e1;
+        }
+      }
+      const map = (arr) => (Array.isArray(arr) ? arr : []).map((e, i) => ({
+        id: String(e.id ?? i),
+        title: e.title ?? e.name ?? e.courseName ?? e.course ?? "Cours",
+        start: e.start ?? e.startAt ?? e.startedAt ?? e.begin ?? e.dateStart ?? e.date_start,
+        end:   e.end   ?? e.endAt   ?? e.endedAt   ?? e.finish ?? e.dateEnd   ?? e.date_end,
+        extendedProps: {
+          professor: e.professor ?? e.teacher ?? e.intervenant ?? e.instructor ?? null,
+          location:  e.location  ?? e.room    ?? e.salle       ?? null,
+          raw: e,
+        },
+      }));
+      setEvents(map(data));
+      } catch (e) {
       const status = e?.response?.status;
       if (status === 404) { setEvents([]); setError(""); }
       else if (status === 401) { setError("Session expirée. Reconnecte-toi."); navigate("/"); }
