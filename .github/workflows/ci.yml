@@ -18,6 +18,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Set API URL
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then
+            echo "REACT_APP_API_URL=https://preprod.uni-connect.cloud/api" >> $GITHUB_ENV
+          else
+            echo "REACT_APP_API_URL=https://uni-connect.cloud/api" >> $GITHUB_ENV
+          fi
+          
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
@@ -72,21 +80,37 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Définir TAG et SERVICE en fonction de la ref
-        id: vars
+      - name: Set TAG & SERVICE (deploy)
         run: |
           if [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then
             echo "TAG=preprod" >> $GITHUB_ENV
             echo "SERVICE=frontend-preprod" >> $GITHUB_ENV
           elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+            echo "TAG=latest" >> $GITHUB_ENV
             echo "SERVICE=frontend" >> $GITHUB_ENV
+          else
+            echo "TAG=" >> $GITHUB_ENV
+            echo "SERVICE=" >> $GITHUB_ENV
           fi
+
 
       - name: Build & Push Docker frontend image
         run: |
-          docker build -t inesbrm1/uniconnect-frontend:${TAG} .
-          docker push inesbrm1/uniconnect-frontend:${TAG}
+          if [[ "${GITHUB_REF}" == "refs/heads/dev" ]]; then
+            # PREPROD
+            docker build -t inesbrm1/uniconnect-frontend:preprod .
+            docker push  inesbrm1/uniconnect-frontend:preprod
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            # PROD (release tag): on publie le tag versionné et latest
+            VER="${GITHUB_REF#refs/tags/}"
+            docker build \
+              -t inesbrm1/uniconnect-frontend:${VER} \
+              -t inesbrm1/uniconnect-frontend:latest .
+            docker push inesbrm1/uniconnect-frontend:${VER}
+            docker push inesbrm1/uniconnect-frontend:latest
+          else
+            echo "Skip image push for ref: ${GITHUB_REF}"
+          fi
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v0.1.0
