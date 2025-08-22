@@ -46,17 +46,35 @@ export default function Planning() {
           throw e1;
         }
       }
-      const map = (arr) => (Array.isArray(arr) ? arr : []).map((e, i) => ({
-        id: String(e.id ?? i),
-        title: e.title ?? e.name ?? e.courseName ?? e.course ?? "Cours",
-        start: e.start ?? e.startAt ?? e.startedAt ?? e.begin ?? e.dateStart ?? e.date_start,
-        end:   e.end   ?? e.endAt   ?? e.endedAt   ?? e.finish ?? e.dateEnd   ?? e.date_end,
-        extendedProps: {
-          professor: e.professor ?? e.teacher ?? e.intervenant ?? e.instructor ?? null,
-          location:  e.location  ?? e.room    ?? e.salle       ?? null,
-          raw: e,
-        },
-      }));
+      const map = (arr) => (Array.isArray(arr) ? arr : []).map((e, i) => {
+        const ep = e.extendedProps || {};
+        const professorRaw =
+          e.professor?.name ??
+          ep.professor?.name ??
+          (typeof e.professor === "string" ? e.professor : null) ??
+          (typeof ep.professor === "string" ? ep.professor : null) ??
+          e.teacher ?? e.intervenant ?? e.instructor ?? null;
+
+        const locationRaw =
+          e.location ??
+          ep.location?.name ??
+          ep.location ??
+          e.room ?? e.salle ?? null;
+
+        return {
+          id: String(e.id ?? i),
+          title: e.title ?? e.name ?? e.courseName ?? e.course ?? "Cours",
+          start: e.start ?? e.startAt ?? e.startedAt ?? e.begin ?? e.dateStart ?? e.date_start,
+          end:   e.end   ?? e.endAt   ?? e.endedAt   ?? e.finish ?? e.dateEnd   ?? e.date_end,
+          extendedProps: {
+            ...ep,                                        
+            professor: professorRaw ? String(professorRaw) : null,
+            location:  locationRaw  ? String(locationRaw)  : null,
+            raw: e,
+          },
+        };
+      });
+
       setEvents(map(data));
       } catch (e) {
       const status = e?.response?.status;
