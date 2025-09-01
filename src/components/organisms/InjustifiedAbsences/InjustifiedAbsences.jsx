@@ -21,7 +21,7 @@ const toBool = (v) =>
     : null;
 
 const InjustifiedAbsences = () => {
-  const [data, setData] = useState([]); 
+  const [data, setData] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
@@ -36,7 +36,6 @@ const InjustifiedAbsences = () => {
         if (!mounted) return;
         setData(Array.isArray(blocks) ? blocks : []);
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.error("[InjustifiedAbsences] API error:", e);
         if (mounted) setErr("Impossible de charger les absences.");
       } finally {
@@ -83,14 +82,16 @@ const InjustifiedAbsences = () => {
       <Title>Absences</Title>
 
       <Select
-        className="mb-4 w-full sm:w-1/2 md:w-1/4"
+        className="mb-4 w-full sm:w-1/2 md:w-1/3"
         options={options.length ? options : [{ value: "", label: "Aucun semestre" }]}
         onChange={(val) => setSelectedSemesterId(val)}
         value={selectedSemesterId ?? ""}
       />
 
-      <div className="flex flex-col lg:flex-row p-4">
-        <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md w-full lg:w-2/3">
+      {/* ✅ utilisation de grid + gap pour un layout responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+        {/* Colonne gauche */}
+        <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md max-w-full overflow-hidden lg:col-span-2">
           {loading ? (
             <p className="text-gray-500 text-sm">Chargement…</p>
           ) : err ? (
@@ -114,11 +115,13 @@ const InjustifiedAbsences = () => {
           )}
         </div>
 
-        <div className="flex flex-col ml-14 p-2 bg-gray-100 rounded-lg shadow-md max-h-fit">
+        {/* Colonne droite */}
+        <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md max-h-fit mt-4 lg:mt-0 lg:col-span-1">
           <Title className="text-xl font-bold text-primary-500">Récapitulatif</Title>
           <div className="flex flex-col justify-between p-2">
-            <Absence title="Total des heures manquées" date={totalHHMM} />
+            <Absence className="w-full" title="Total des heures manquées" date={totalHHMM} />
             <Absence
+              className="w-full"
               title="Absence injustifiée"
               date={`${unjustifiedHHMM}${unjustifiedCount ? ` (${unjustifiedCount})` : ""}`}
             />
