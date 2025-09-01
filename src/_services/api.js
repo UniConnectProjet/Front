@@ -1,7 +1,7 @@
 /* eslint-env browser, node */
 import axios from "axios";
 
-const baseURL = process.env.REACT_APP_API_URL || "/api";
+const baseURL = "http://localhost:8000/api" || "/api";
 
 export const api = axios.create({
   baseURL,
