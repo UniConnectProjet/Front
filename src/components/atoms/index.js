@@ -9,5 +9,6 @@ import Text from "./Text/Text";
 import EventCard from "./EventCard/EventCard";
 import Filter from "./Filter/Filter";
 import Select from "./Select/Select";
+import TextArea from "./TextArea/TextArea";
 
-export { Button, Input, Title, Image, Grade, Average, OverallAverage, Text, EventCard, Filter, Select };
+export { Button, Input, Title, Image, Grade, Average, OverallAverage, Text, EventCard, Filter, Select, TextArea };
