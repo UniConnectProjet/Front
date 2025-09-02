@@ -1,7 +1,7 @@
 // src/components/molecules/FileUpload/index.jsx
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import Button from "@/components/atoms/Button";
+import { Button } from "../../atoms";
 
 function formatBytes(bytes) {
   if (bytes === 0) return "0 B";

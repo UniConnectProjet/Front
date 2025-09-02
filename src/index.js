@@ -4,10 +4,13 @@ import './index.css';
 import App from './App';
 import AuthProvider from './auth/AuthProvider';
 import reportWebVitals from './reportWebVitals';
+import { ToastProvider } from './components/molecules/ToastProvider/ToastProvider';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AuthProvider>
-    <App />
+    <ToastProvider position="top-right" max={4}>
+      <App />
+    </ToastProvider>
   </AuthProvider>
 );
 

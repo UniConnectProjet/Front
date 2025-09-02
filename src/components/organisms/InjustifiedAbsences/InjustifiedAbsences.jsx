@@ -1,16 +1,28 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Title, Select } from "../../atoms";
 import { AbsenceJustification, Absence } from "../../molecules";
+import AbsenceJustifyModal from "../../organisms/AbsenceJustifyModal/AbsenceJustifyModal";
 import { getAbsenceBlocks } from "../../../_services/student.service";
+import { getMyUnjustifiedAbsences } from "../../../_services/absence";
 
-const durationHHMM = (startISO, endISO) => {
-  if (!startISO || !endISO) return "—";
+const minutesBetween = (startISO, endISO) => {
+  if (!startISO || !endISO) return 0;
   const start = new Date(startISO);
   const end = new Date(endISO);
-  const min = Math.max(0, Math.floor((end - start) / 60000));
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${h}h${String(m).padStart(2, "0")} de cours manquées`;
+  return Math.max(0, Math.floor((end - start) / 60000));
+};
+const hhmm = (min) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}`;
+const durationHHMM = (s, e) => `${hhmm(minutesBetween(s, e))} de cours manquées`;
+
+const dateLabelFR = (startISO, endISO) => {
+  if (!startISO || !endISO) return "";
+  const s = new Date(startISO);
+  const e = new Date(endISO);
+  const day = s.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const sh = s.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const eh = e.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const dayCap = day.charAt(0).toUpperCase() + day.slice(1);
+  return `${dayCap} de ${sh} à ${eh}`;
 };
 
 const toBool = (v) =>
@@ -20,30 +32,66 @@ const toBool = (v) =>
     ? false
     : null;
 
+/** Normalise le statut renvoyé par l'API : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
+const normalizeStatus = (a) => {
+  const s = a?.status;
+  if (typeof s === "number") {
+    if (s === 4) return "PENDING";
+    if (s === 1) return "JUSTIFIED";
+    if (s === 3) return "UNJUSTIFIED";
+  }
+  if (typeof s === "string" && s) {
+    const up = s.toUpperCase();
+    if (up.includes("PENDING") || up.trim() === "4") return "PENDING";
+    if (up.includes("APPROVED") || up.includes("JUSTIFIED") || up.trim() === "1") return "JUSTIFIED";
+    if (up.includes("UNJUSTIFIED") || up.trim() === "3") return "UNJUSTIFIED";
+  }
+  if (s && typeof s === "object") {
+    const id = Number(s.id ?? s.value ?? s.status_id);
+    const code = String(s.code ?? s.name ?? s.label ?? s.status ?? "").toUpperCase();
+    if (id === 4 || code.includes("PENDING")) return "PENDING";
+    if (id === 1 || code.includes("APPROVED") || code.includes("JUSTIFIED")) return "JUSTIFIED";
+    if (id === 3 || code.includes("UNJUSTIFIED")) return "UNJUSTIFIED";
+  }
+  if (toBool(a?.isPending ?? a?.justificationPending) === true) return "PENDING";
+  if (toBool(a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
+  return "UNJUSTIFIED";
+};
+
 const InjustifiedAbsences = () => {
   const [data, setData] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setErr(null);
-        const blocks = await getAbsenceBlocks();
-        if (!mounted) return;
-        setData(Array.isArray(blocks) ? blocks : []);
-      } catch (e) {
-        console.error("[InjustifiedAbsences] API error:", e);
-        if (mounted) setErr("Impossible de charger les absences.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => void (mounted = false);
+  // vue active : 'ALL' | 'UNJUSTIFIED'
+  const [view, setView] = useState("UNJUSTIFIED");
+
+  // liste UNJUSTIFIED venant de l'API dédiée
+  const [unjustified, setUnjustified] = useState([]);
+  const [loadingUnj, setLoadingUnj] = useState(false);
+  const [errUnj, setErrUnj] = useState(null);
+
+  // modale
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activeAbsence, setActiveAbsence] = useState(null);
+
+  // ----- fetch total blocks (toutes les absences + totaux)
+  const fetchBlocks = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const blocks = await getAbsenceBlocks();
+      setData(Array.isArray(blocks) ? blocks : []);
+    } catch (e) {
+      console.error("[InjustifiedAbsences] getAbsenceBlocks error:", e);
+      setErr("Impossible de charger les absences.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { fetchBlocks(); }, [fetchBlocks]);
 
   // Select first semester by default when data arrives
   useEffect(() => {
@@ -56,9 +104,7 @@ const InjustifiedAbsences = () => {
     () =>
       data.map((b) => ({
         value: String(b?.semester?.id ?? ""),
-        label:
-          b?.semester?.name ??
-          (b?.semester?.id ? `Semestre ${b.semester.id}` : "Semestre"),
+        label: b?.semester?.name ?? (b?.semester?.id ? `Semestre ${b.semester.id}` : "Semestre"),
       })),
     [data]
   );
@@ -68,14 +114,56 @@ const InjustifiedAbsences = () => {
     [data, selectedSemesterId]
   );
 
-  const unjustifiedAbsences = useMemo(() => {
-    const list = selectedBlock?.absences ?? [];
-    return list.filter((a) => toBool(a?.justified ?? a?.isJustified) === false);
-  }, [selectedBlock]);
+  const allAbsences = useMemo(() => selectedBlock?.absences ?? [], [selectedBlock]);
 
-  const totalHHMM = selectedBlock?.totals?.hhmm ?? "0h00";
-  const unjustifiedHHMM = selectedBlock?.totals?.unjustified?.hhmm ?? "0h00";
-  const unjustifiedCount = selectedBlock?.totals?.unjustified?.count ?? 0;
+  // ----- fetch UNJUSTIFIED (API dédiée) dès que le semestre change
+  const fetchUnjustified = useCallback(async () => {
+    if (!selectedSemesterId) return;
+    setLoadingUnj(true);
+    setErrUnj(null);
+    try {
+      const res = await getMyUnjustifiedAbsences({ semesterId: selectedSemesterId });
+      const rows = Array.isArray(res?.data) ? res.data : [];
+      setUnjustified(rows);
+    } catch (e) {
+      console.error("[InjustifiedAbsences] getMyUnjustifiedAbsences error:", e);
+      setErrUnj("Impossible de charger les absences injustifiées.");
+      setUnjustified([]);
+    } finally {
+      setLoadingUnj(false);
+    }
+  }, [selectedSemesterId]);
+
+  useEffect(() => { fetchUnjustified(); }, [fetchUnjustified]);
+
+  // Compteur/HH:MM injustifiées (à partir de la route dédiée)
+  const unjustifiedDerived = useMemo(() => {
+    const minutes = unjustified.reduce(
+      (sum, a) => sum + minutesBetween(a.startedDate, a.endedDate),
+      0
+    );
+    return { count: unjustified.length, hhmm: hhmm(minutes) };
+  }, [unjustified]);
+
+  // Liste affichée selon la vue
+  const visibleAbsences = useMemo(
+    () => (view === "ALL" ? allAbsences : unjustified),
+    [view, allAbsences, unjustified]
+  );
+
+  const totalHHMM =
+    selectedBlock?.totals?.hhmm ??
+    hhmm(allAbsences.reduce((acc, a) => acc + minutesBetween(a.startedDate, a.endedDate), 0));
+
+  // Ouvrir la modale
+  const openJustify = (a) => {
+    setActiveAbsence({
+      id: a.id,
+      dateLabel: dateLabelFR(a.startedDate, a.endedDate),
+      missedHours: durationHHMM(a.startedDate, a.endedDate),
+    });
+    setModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col px-4 md:px-8 lg:ml-20 w-full max-w-screen-lg mx-auto">
@@ -88,46 +176,69 @@ const InjustifiedAbsences = () => {
         value={selectedSemesterId ?? ""}
       />
 
-      {/* ✅ utilisation de grid + gap pour un layout responsive */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
-        {/* Colonne gauche */}
+        {/* Liste */}
         <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md max-w-full overflow-hidden lg:col-span-2">
-          {loading ? (
+          {loading || (view !== "ALL" && loadingUnj) ? (
             <p className="text-gray-500 text-sm">Chargement…</p>
-          ) : err ? (
-            <p className="text-red-600 text-sm">{err}</p>
+          ) : err || (view !== "ALL" && errUnj) ? (
+            <p className="text-red-600 text-sm">{err || errUnj}</p>
           ) : !selectedBlock ? (
             <p className="text-gray-500 text-sm">Aucun semestre sélectionné</p>
-          ) : unjustifiedAbsences.length === 0 ? (
-            <p className="text-gray-500 text-sm">Aucune absence injustifiée</p>
+          ) : visibleAbsences.length === 0 ? (
+            <p className="text-gray-500 text-sm">
+              {view === "ALL" ? "Aucune absence" : "Aucune absence injustifiée"}
+            </p>
           ) : (
-            unjustifiedAbsences.map((a) => (
-              <AbsenceJustification
-                key={a.id}
-                justification={() => {}}
-                title="Justifier"
-                date={`${new Date(a.startedDate).toLocaleString()} → ${new Date(
-                  a.endedDate
-                ).toLocaleString()}`}
-                hours={durationHHMM(a.startedDate, a.endedDate)}
-              />
-            ))
+            visibleAbsences.map((a) => {
+              const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | JUSTIFIED
+              const title =
+                status === "UNJUSTIFIED"
+                  ? "Justifier"
+                  : status === "PENDING"
+                  ? "En cours"
+                  : "Justifiée";
+              const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
+              return (
+                <AbsenceJustification
+                  key={a.id}
+                  justification={onClick}
+                  title={title}
+                  date={dateLabelFR(a.startedDate, a.endedDate)}
+                  hours={durationHHMM(a.startedDate, a.endedDate)}
+                />
+              );
+            })
           )}
         </div>
 
-        {/* Colonne droite */}
+        {/* Récap cliquable */}
         <div className="flex flex-col p-2 bg-gray-100 rounded-lg shadow-md max-h-fit mt-4 lg:mt-0 lg:col-span-1">
           <Title className="text-xl font-bold text-primary-500">Récapitulatif</Title>
           <div className="flex flex-col justify-between p-2">
-            <Absence className="w-full" title="Total des heures manquées" date={totalHHMM} />
             <Absence
-              className="w-full"
+              className={`w-full ${view === "ALL" ? "ring-2 ring-primary-400 rounded-lg" : ""}`}
+              title="Total des heures manquées"
+              date={totalHHMM}
+              onClick={() => setView("ALL")}
+            />
+            <Absence
+              className={`w-full ${view === "UNJUSTIFIED" ? "ring-2 ring-primary-400 rounded-lg" : ""}`}
               title="Absence injustifiée"
-              date={`${unjustifiedHHMM}${unjustifiedCount ? ` (${unjustifiedCount})` : ""}`}
+              date={`${unjustifiedDerived.hhmm}${unjustifiedDerived.count ? ` (${unjustifiedDerived.count})` : ""}`}
+              onClick={() => setView("UNJUSTIFIED")}
             />
           </div>
         </div>
       </div>
+
+      {/* Modale */}
+      <AbsenceJustifyModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        absence={activeAbsence}
+        onSuccess={() => { fetchBlocks(); fetchUnjustified(); }} // rafraîchir les 2 sources
+      />
     </div>
   );
 };
