@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { TextArea, ProgressBar, Button, Select } from "../../atoms";
 import { FormField, FileUpload } from "../../molecules";
@@ -82,81 +82,91 @@ export default function AbsenceJustifyModal({
 
   return (
     <ModalShell open={open} onClose={onClose} title="Justifier une absence" size="md">
-      {/* Contexte absence */}
-      {absence && (
-        <div className="mb-4 text-[14px] leading-5 text-text-700">
-          <div className="font-semibold text-text-900">{absence.dateLabel}</div>
-          {absence.missedHours && (
-            <div className="text-text-500">{absence.missedHours}</div>
-          )}
-        </div>
-      )}
-
-      <div className="grid gap-4">
-        <FormField label="Raison" error={errors.reason} required>
-          {/* Remplace par ton atom Select si tu as une implémentation différente */}
-          <Select
-            value={reason}
-            onChange={setReason}
-            options={options}
-            placeholder="Motif à préciser"
-          />
-        </FormField>
-
-        <FormField label="Commentaire" hint="Optionnel">
-          <TextArea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Ajouter un commentaire…"
-          />
-        </FormField>
-
-        <FormField
-            label="Ajouter un justificatif"
-            hint="PDF, JPG, PNG — 5 Mo max, 3 fichiers"
-            error={errors.attachments} 
-        >
-            <FileUpload
-                id="absence-files"
-                files={files}
-                onChange={setFiles}
-                accept={["application/pdf","image/jpeg","image/png"]}  // ← PDF, JPG, PNG
-                maxFiles={3}                                           // ← 3 fichiers
-                maxSizeMB={5}                                          // ← 5 Mo
-                mode="button"
-                buttonLabel="Joindre un fichier"
-                onRejected={(_, reasons) =>
-                    setErrors((e) => ({ ...e, attachments: reasons.join(" • ") }))
-                }
-            />
-        </FormField>
-
-        {progress !== null && (
-          <div className="grid gap-1">
-            <ProgressBar value={progress} />
-            <div className="text-[12px] leading-4 text-text-500">Téléversement… {progress}%</div>
+      <div
+        className="
+          sm:max-h-none
+          max-h-[calc(100dvh-10rem)]   /* hauteur utile mobile */
+          overflow-y-auto overscroll-contain
+          pr-1 -mr-1                    /* évite le décalage à cause de la scrollbar */
+        "
+      >
+        {/* Contexte absence */}
+        {absence && (
+          <div className="mb-4 text-[14px] leading-5 text-text-700">
+            <div className="font-semibold text-text-900">{absence.dateLabel}</div>
+            {absence.missedHours && (
+              <div className="text-text-500">{absence.missedHours}</div>
+            )}
           </div>
         )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={submitting}
-            className="border-text-300 text-text-700 hover:bg-text-100"
+        <div className="grid gap-4">
+          <FormField label="Raison" error={errors.reason} required>
+            <Select
+              value={reason}
+              onChange={setReason}
+              options={options}
+              placeholder="Motif à préciser"
+            />
+          </FormField>
+
+          <FormField label="Commentaire" hint="Optionnel">
+            <TextArea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Ajouter un commentaire…"
+            />
+          </FormField>
+
+          <FormField
+            label="Ajouter un justificatif"
+            hint="PDF, JPG, PNG — 5 Mo max, 3 fichiers"
+            error={errors.attachments}
           >
-            Annuler
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="rounded-5 !bg-buttonColor-400 hover:!bg-buttonColor-500 !text-white p-1 "
-          >
-            {submitting ? "Envoi…" : "Valider"}
-          </Button>
+            <FileUpload
+              id="absence-files"
+              files={files}
+              onChange={setFiles}
+              accept={ALLOWED_MIME}
+              maxFiles={3}
+              maxSizeMB={5}
+              mode="button"
+              buttonLabel="Joindre un fichier"
+              onRejected={(_, reasons) =>
+                setErrors((e) => ({ ...e, attachments: reasons.join(" • ") }))
+              }
+            />
+          </FormField>
+
+          {progress !== null && (
+            <div className="grid gap-1">
+              <ProgressBar value={progress} />
+              <div className="text-[12px] leading-4 text-text-500">
+                Téléversement… {progress}%
+              </div>
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="flex justify-end gap-2 pt-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={submitting}
+          className="border-text-300 text-text-700 hover:bg-text-100"
+        >
+          Annuler
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="rounded-5 !bg-buttonColor-400 hover:!bg-buttonColor-500 !text-white p-1 "
+        >
+          {submitting ? "Envoi…" : "Valider"}
+        </Button>
       </div>
     </ModalShell>
   );
@@ -172,5 +182,5 @@ AbsenceJustifyModal.propTypes = {
   }),
   onSuccess: PropTypes.func,
   csrfToken: PropTypes.string,
-  endpoint: PropTypes.func, // optionnel si tu veux surcharger l'URL
+  endpoint: PropTypes.func,
 };

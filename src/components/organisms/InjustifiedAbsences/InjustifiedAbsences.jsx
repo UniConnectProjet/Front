@@ -32,29 +32,38 @@ const toBool = (v) =>
     ? false
     : null;
 
-/** Normalise le statut renvoyé par l'API : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
+/** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
 const normalizeStatus = (a) => {
   const s = a?.status;
+
+  // number direct
   if (typeof s === "number") {
     if (s === 4) return "PENDING";
-    if (s === 1) return "JUSTIFIED";
     if (s === 3) return "UNJUSTIFIED";
+    if (s === 1) return "JUSTIFIED";
   }
+
+  // string (privilégier les égalités strictes)
   if (typeof s === "string" && s) {
-    const up = s.toUpperCase();
-    if (up.includes("PENDING") || up.trim() === "4") return "PENDING";
-    if (up.includes("APPROVED") || up.includes("JUSTIFIED") || up.trim() === "1") return "JUSTIFIED";
-    if (up.includes("UNJUSTIFIED") || up.trim() === "3") return "UNJUSTIFIED";
+    const up = s.trim().toUpperCase();
+
+    if (up === "PENDING" || up === "4") return "PENDING";
+    if (up === "UNJUSTIFIED" || up === "3") return "UNJUSTIFIED";
+    if (up === "JUSTIFIED" || up === "APPROVED" || up === "1") return "JUSTIFIED";
+
+    if (/\bPENDING\b/.test(up)) return "PENDING";
+    if (/\bUNJUSTIFIED\b/.test(up)) return "UNJUSTIFIED";
+    if (/\b(JUSTIFIED|APPROVED)\b/.test(up)) return "JUSTIFIED";
   }
   if (s && typeof s === "object") {
     const id = Number(s.id ?? s.value ?? s.status_id);
-    const code = String(s.code ?? s.name ?? s.label ?? s.status ?? "").toUpperCase();
-    if (id === 4 || code.includes("PENDING")) return "PENDING";
-    if (id === 1 || code.includes("APPROVED") || code.includes("JUSTIFIED")) return "JUSTIFIED";
-    if (id === 3 || code.includes("UNJUSTIFIED")) return "UNJUSTIFIED";
+    const code = String(s.code ?? s.name ?? s.label ?? s.status ?? "").toUpperCase().trim();
+    if (id === 4 || code === "PENDING") return "PENDING";
+    if (id === 3 || code === "UNJUSTIFIED") return "UNJUSTIFIED";
+    if (id === 1 || code === "JUSTIFIED" || code === "APPROVED") return "JUSTIFIED";
   }
-  if (toBool(a?.isPending ?? a?.justificationPending) === true) return "PENDING";
-  if (toBool(a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
+  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
+  if ((a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
   return "UNJUSTIFIED";
 };
 
@@ -193,11 +202,9 @@ const InjustifiedAbsences = () => {
             visibleAbsences.map((a) => {
               const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | JUSTIFIED
               const title =
-                status === "UNJUSTIFIED"
-                  ? "Justifier"
-                  : status === "PENDING"
-                  ? "En cours"
-                  : "Justifiée";
+                status === "UNJUSTIFIED" ? "Justifier" :
+                status === "PENDING"     ? "En cours"  :
+                                          "Justifiée";
               const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
               return (
                 <AbsenceJustification
