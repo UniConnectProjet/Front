@@ -10,23 +10,30 @@ export default function Header() {
     let alive = true;
     (async () => {
       try {
-        const r = await api.get("/me");
-        const d = typeof r.data === "string" ? JSON.parse(r.data) : r.data;
+        const r = await api.get("/me/student");
+        const d = typeof r.data === "string" ? JSON.parse(r.data) : (r.data || {});
 
-        const first = d?.firstName ?? d?.firstname ?? d?.name ?? null;    
-        const last  = d?.lastName  ?? d?.lastname  ?? null;
+        const safe = (v) => (typeof v === "string" && v.trim().length ? v.trim() : null);
+        const byEmail = () => {
+          const e = safe(d.email);
+          return e && e.includes("@") ? e.split("@")[0] : null;
+        };
 
-        let name = [first, last].filter(Boolean).join(" ").trim();
-        if (!name) {
-          const email = d?.email || "";
-          name = email.includes("@") ? email.split("@")[0] : "Utilisateur";
-        }
-        if (alive) setFullName(name);
+        const display =
+          safe([safe(d.name), safe(d.lastname)].filter(Boolean).join(" ")) ||
+          safe(d.displayName) ||
+          safe(d.fullName) ||
+          byEmail() ||
+          "Utilisateur";
+        if (alive) setFullName(display);
       } catch {
         if (alive) setFullName("Utilisateur");
       }
     })();
-    return () => { alive = false; };
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
