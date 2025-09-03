@@ -25,38 +25,34 @@ const dateLabelFR = (startISO, endISO) => {
   return `${dayCap} de ${sh} à ${eh}`;
 };
 
-/** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
+/** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'APPROVED' */
 const normalizeStatus = (a) => {
   const s = a?.status;
 
-  // number direct
+  // 1) Priorité au statut string déjà normalisé par le backend
+  if (typeof s === "string") {
+    const up = s.trim().toUpperCase();
+    if (up === "PENDING") return "PENDING";
+    if (up === "UNJUSTIFIED") return "UNJUSTIFIED";
+    if (up === "APPROVED" || up === "APPROVED") return "APPROVED";
+  }
+
+  // 3) Anciens formats numériques
   if (typeof s === "number") {
     if (s === 4) return "PENDING";
     if (s === 3) return "UNJUSTIFIED";
-    if (s === 1) return "JUSTIFIED";
+    if (s === 1) return "APPROVED";
   }
 
-  // string (privilégier les égalités strictes)
+  // 4) Anciens formats string numériques
   if (typeof s === "string" && s) {
     const up = s.trim().toUpperCase();
-
-    if (up === "PENDING" || up === "4") return "PENDING";
-    if (up === "UNJUSTIFIED" || up === "3") return "UNJUSTIFIED";
-    if (up === "JUSTIFIED" || up === "APPROVED" || up === "1") return "JUSTIFIED";
-
-    if (/\bPENDING\b/.test(up)) return "PENDING";
-    if (/\bUNJUSTIFIED\b/.test(up)) return "UNJUSTIFIED";
-    if (/\b(JUSTIFIED|APPROVED)\b/.test(up)) return "JUSTIFIED";
+    if (up === "4") return "PENDING";
+    if (up === "3") return "UNJUSTIFIED";
+    if (up === "1") return "APPROVED";
   }
-  if (s && typeof s === "object") {
-    const id = Number(s.id ?? s.value ?? s.status_id);
-    const code = String(s.code ?? s.name ?? s.label ?? s.status ?? "").toUpperCase().trim();
-    if (id === 4 || code === "PENDING") return "PENDING";
-    if (id === 3 || code === "UNJUSTIFIED") return "UNJUSTIFIED";
-    if (id === 1 || code === "JUSTIFIED" || code === "APPROVED") return "JUSTIFIED";
-  }
-  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
-  if ((a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
+  
+  // 5) Par défaut, considérer comme injustifiée
   return "UNJUSTIFIED";
 };
 
@@ -67,7 +63,7 @@ const InjustifiedAbsences = () => {
   const [err, setErr] = useState(null);
 
   // vue active : 'ALL' | 'UNJUSTIFIED'
-  const [view, setView] = useState("UNJUSTIFIED");
+  const [view, setView] = useState("ALL");
 
   // liste UNJUSTIFIED venant de l'API dédiée
   const [unjustified, setUnjustified] = useState([]);
@@ -193,12 +189,14 @@ const InjustifiedAbsences = () => {
             </p>
           ) : (
             visibleAbsences.map((a) => {
-              const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | JUSTIFIED
+              const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | APPROVED
               const title =
                 status === "UNJUSTIFIED" ? "Justifier" :
                 status === "PENDING"     ? "En cours"  :
-                                          "Justifiée";
+                status === "APPROVED"   ? "Justifiée" :
+                                          "";
               const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
+              const isDisabled = status !== "UNJUSTIFIED";              
               return (
                 <AbsenceJustification
                   key={a.id}
@@ -206,6 +204,8 @@ const InjustifiedAbsences = () => {
                   title={title}
                   date={dateLabelFR(a.startedDate, a.endedDate)}
                   hours={durationHHMM(a.startedDate, a.endedDate)}
+                  disabled={isDisabled}
+                  hideButton={view === "ALL"}
                 />
               );
             })
@@ -219,7 +219,7 @@ const InjustifiedAbsences = () => {
             <Absence
               className={`w-full ${view === "ALL" ? "ring-2 ring-primary-400 rounded-lg" : ""}`}
               title="Total des heures manquées"
-              date={totalHHMM}
+              date={`${totalHHMM}${allAbsences.length ? ` (${allAbsences.length})` : ""}`}
               onClick={() => setView("ALL")}
             />
             <Absence

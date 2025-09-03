@@ -30,7 +30,15 @@ export const api = axios.create({
 api.defaults.headers.common["Accept"] = "application/json";
 api.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 
-// Intercepteur côté succès: rejeter les réponses HTML "cachées"
+// Variable pour stocker la fonction de déconnexion
+let logoutCallback = null;
+
+// Fonction pour enregistrer le callback de déconnexion
+export function setLogoutCallback(callback) {
+  logoutCallback = callback;
+}
+
+// Intercepteur de réponse: gérer les erreurs d'authentification
 api.interceptors.response.use(
   (r) => {
     const ct = String(r.headers?.["content-type"] || "").toLowerCase();
@@ -43,6 +51,20 @@ api.interceptors.response.use(
     }
     return r;
   },
-  (error) => Promise.reject(error)
+  async (error) => {
+    const { response } = error;
+    
+    // Gérer les erreurs d'authentification (401/419 = token expiré/invalide)
+    if (response?.status === 401 || response?.status === 419) {
+      // Éviter les boucles infinies sur les endpoints de connexion
+      const isLoginEndpoint = error.config?.url?.includes('/login_check');
+      
+      if (!isLoginEndpoint && logoutCallback) {
+        logoutCallback();
+      }
+    }
+    
+    return Promise.reject(error);
+  }
 );
 export default api;
