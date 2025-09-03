@@ -5,5 +5,7 @@ import GradeCard from "./GradeCard/GradeCard";
 import Absence from "./Absence/Absence";
 import AbsenceJustification from "./AbsenceJustification/AbsenceJustification";
 import WeekdayHeader from "./WeekdayHeader/WeekdayHeader";
+import FormField from "./FormField/FormField";
+import FileUpload from "./FileUpload/FileUpload";
 
-export { Form, LogoFond, Menu, GradeCard, Absence, AbsenceJustification, WeekdayHeader };
+export { Form, LogoFond, Menu, GradeCard, Absence, AbsenceJustification, WeekdayHeader, FormField, FileUpload };
