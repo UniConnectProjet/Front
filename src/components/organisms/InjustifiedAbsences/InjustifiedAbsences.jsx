@@ -29,34 +29,34 @@ const dateLabelFR = (startISO, endISO) => {
 const normalizeStatus = (a) => {
   const s = a?.status;
 
-  // number direct
+  // Si le statut est déjà normalisé par le backend (cas de buildAbsenceBlocks)
+  if (typeof s === "string") {
+    const up = s.trim().toUpperCase();
+    if (up === "PENDING") return "PENDING";
+    if (up === "UNJUSTIFIED") return "UNJUSTIFIED";
+    if (up === "JUSTIFIED") return "JUSTIFIED";
+  }
+
+  // Vérifier les propriétés booléennes directes (cas de getMyUnjustifiedAbsences)
+  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
+  if ((a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
+
+  // number direct (ancien format)
   if (typeof s === "number") {
     if (s === 4) return "PENDING";
     if (s === 3) return "UNJUSTIFIED";
     if (s === 1) return "JUSTIFIED";
   }
 
-  // string (privilégier les égalités strictes)
+  // string avec valeurs numériques (ancien format)
   if (typeof s === "string" && s) {
     const up = s.trim().toUpperCase();
-
-    if (up === "PENDING" || up === "4") return "PENDING";
-    if (up === "UNJUSTIFIED" || up === "3") return "UNJUSTIFIED";
-    if (up === "JUSTIFIED" || up === "APPROVED" || up === "1") return "JUSTIFIED";
-
-    if (/\bPENDING\b/.test(up)) return "PENDING";
-    if (/\bUNJUSTIFIED\b/.test(up)) return "UNJUSTIFIED";
-    if (/\b(JUSTIFIED|APPROVED)\b/.test(up)) return "JUSTIFIED";
+    if (up === "4") return "PENDING";
+    if (up === "3") return "UNJUSTIFIED";
+    if (up === "1") return "JUSTIFIED";
   }
-  if (s && typeof s === "object") {
-    const id = Number(s.id ?? s.value ?? s.status_id);
-    const code = String(s.code ?? s.name ?? s.label ?? s.status ?? "").toUpperCase().trim();
-    if (id === 4 || code === "PENDING") return "PENDING";
-    if (id === 3 || code === "UNJUSTIFIED") return "UNJUSTIFIED";
-    if (id === 1 || code === "JUSTIFIED" || code === "APPROVED") return "JUSTIFIED";
-  }
-  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
-  if ((a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
+  
+  // Par défaut, considérer comme injustifiée
   return "UNJUSTIFIED";
 };
 
@@ -199,6 +199,18 @@ const InjustifiedAbsences = () => {
                 status === "PENDING"     ? "En cours"  :
                                           "Justifiée";
               const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
+              const isDisabled = status !== "UNJUSTIFIED";
+              
+              // Debug détaillé
+              console.log(`=== ABSENCE ${a.id} ===`);
+              console.log('Données complètes:', a);
+              console.log('Status brut:', a.status);
+              console.log('Justified brut:', a.justified);
+              console.log('Status normalisé:', status);
+              console.log('Titre du bouton:', title);
+              console.log('Est désactivé:', isDisabled);
+              console.log('========================');
+              
               return (
                 <AbsenceJustification
                   key={a.id}
@@ -206,6 +218,7 @@ const InjustifiedAbsences = () => {
                   title={title}
                   date={dateLabelFR(a.startedDate, a.endedDate)}
                   hours={durationHHMM(a.startedDate, a.endedDate)}
+                  disabled={isDisabled}
                 />
               );
             })
