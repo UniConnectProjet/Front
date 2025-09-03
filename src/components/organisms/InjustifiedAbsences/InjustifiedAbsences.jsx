@@ -4,7 +4,6 @@ import { AbsenceJustification, Absence } from "../../molecules";
 import AbsenceJustifyModal from "../../organisms/AbsenceJustifyModal/AbsenceJustifyModal";
 import { getAbsenceBlocks } from "../../../_services/student.service";
 import { getMyUnjustifiedAbsences } from "../../../_services/absence";
-import { useAuth } from "../../../auth/AuthProvider";
 
 const minutesBetween = (startISO, endISO) => {
   if (!startISO || !endISO) return 0;
