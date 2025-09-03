@@ -10,6 +10,7 @@ import FileUpload from "./FileUpload/FileUpload";
 import DashboardGrid from "./DashboardGrid";
 import QuickActions from "./QuickActions";
 import WeekScheduleGrid from "./WeekScheduleGrid";
+import DailySessions from "./DailySessions";
 
 export { 
     Form, 
@@ -23,5 +24,6 @@ export {
     FileUpload,
     DashboardGrid,
     QuickActions,
-    WeekScheduleGrid
+    WeekScheduleGrid,
+    DailySessions
 };

@@ -15,6 +15,7 @@ import DashboardCard from "./DashboardCard";
 import DateNavigation from "./DateNavigation";
 import EmptyState from "./EmptyState";
 import LoadingSpinner from "./LoadingSpinner";
+import SessionCard from "./SessionCard";
 
 export { 
     Button, 
@@ -33,5 +34,6 @@ export {
     DashboardCard,
     DateNavigation,
     EmptyState,
-    LoadingSpinner
+    LoadingSpinner,
+    SessionCard
 };
