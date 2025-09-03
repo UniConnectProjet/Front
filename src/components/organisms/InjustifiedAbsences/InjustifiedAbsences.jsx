@@ -4,6 +4,7 @@ import { AbsenceJustification, Absence } from "../../molecules";
 import AbsenceJustifyModal from "../../organisms/AbsenceJustifyModal/AbsenceJustifyModal";
 import { getAbsenceBlocks } from "../../../_services/student.service";
 import { getMyUnjustifiedAbsences } from "../../../_services/absence";
+import { useAuth } from "../../../auth/AuthProvider";
 
 const minutesBetween = (startISO, endISO) => {
   if (!startISO || !endISO) return 0;
@@ -25,54 +26,46 @@ const dateLabelFR = (startISO, endISO) => {
   return `${dayCap} de ${sh} à ${eh}`;
 };
 
-/** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
+/** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'APPROVED' */
 const normalizeStatus = (a) => {
   const s = a?.status;
 
-  // 1) Priorité aux indicateurs booléens provenant de la BDD/API
-  //    - pending en premier
-  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
-
-  //    - puis justified explicite (true -> JUSTIFIED, false -> UNJUSTIFIED)
-  const justifiedFlag = (a?.justified ?? a?.isJustified);
-  if (typeof justifiedFlag === "boolean") {
-    return justifiedFlag ? "JUSTIFIED" : "UNJUSTIFIED";
-  }
-
-  // 2) Si pas de booléens fiables, utiliser le statut déjà normalisé côté backend
+  // 1) Priorité au statut string déjà normalisé par le backend
   if (typeof s === "string") {
     const up = s.trim().toUpperCase();
     if (up === "PENDING") return "PENDING";
     if (up === "UNJUSTIFIED") return "UNJUSTIFIED";
-    if (up === "JUSTIFIED") return "JUSTIFIED";
+    if (up === "APPROVED" || up === "APPROVED") return "APPROVED";
   }
 
-  // 3) Anciens formats
+  // 3) Anciens formats numériques
   if (typeof s === "number") {
     if (s === 4) return "PENDING";
     if (s === 3) return "UNJUSTIFIED";
-    if (s === 1) return "JUSTIFIED";
+    if (s === 1) return "APPROVED";
   }
 
+  // 4) Anciens formats string numériques
   if (typeof s === "string" && s) {
     const up = s.trim().toUpperCase();
     if (up === "4") return "PENDING";
     if (up === "3") return "UNJUSTIFIED";
-    if (up === "1") return "JUSTIFIED";
+    if (up === "1") return "APPROVED";
   }
   
-  // 4) Par défaut, considérer comme injustifiée
+  // 5) Par défaut, considérer comme injustifiée
   return "UNJUSTIFIED";
 };
 
 const InjustifiedAbsences = () => {
+  const { user } = useAuth();
   const [data, setData] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
 
   // vue active : 'ALL' | 'UNJUSTIFIED'
-  const [view, setView] = useState("UNJUSTIFIED");
+  const [view, setView] = useState("ALL");
 
   // liste UNJUSTIFIED venant de l'API dédiée
   const [unjustified, setUnjustified] = useState([]);
@@ -89,15 +82,6 @@ const InjustifiedAbsences = () => {
     setErr(null);
     try {
       const blocks = await getAbsenceBlocks();
-      console.log("=== DONNÉES getAbsenceBlocks ===");
-      console.log("Blocks reçus:", blocks);
-      if (blocks && blocks.length > 0) {
-        console.log("Premier block:", blocks[0]);
-        if (blocks[0].absences && blocks[0].absences.length > 0) {
-          console.log("Première absence du block:", blocks[0].absences[0]);
-        }
-      }
-      console.log("================================");
       setData(Array.isArray(blocks) ? blocks : []);
     } catch (e) {
       console.error("[InjustifiedAbsences] getAbsenceBlocks error:", e);
@@ -207,23 +191,27 @@ const InjustifiedAbsences = () => {
             </p>
           ) : (
             visibleAbsences.map((a) => {
-              const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | JUSTIFIED
+              const status = normalizeStatus(a); // UNJUSTIFIED | PENDING | APPROVED
               const title =
                 status === "UNJUSTIFIED" ? "Justifier" :
                 status === "PENDING"     ? "En cours"  :
-                                          "Justifiée";
+                status === "APPROVED"   ? "Justifiée" :
+                                          "";
               const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
               const isDisabled = status !== "UNJUSTIFIED";
               
-              // Debug détaillé
-              console.log(`=== ABSENCE ${a.id} ===`);
-              console.log('Données complètes:', a);
-              console.log('Status brut:', a.status);
-              console.log('Justified brut:', a.justified);
-              console.log('Status normalisé:', status);
-              console.log('Titre du bouton:', title);
-              console.log('Est désactivé:', isDisabled);
-              console.log('========================');
+                             // Debug temporaire pour voir le statut
+               console.log(`=== DEBUG ABSENCE ${a.id} ===`);
+               console.log("User ID:", user?.id);
+               console.log("Données complètes:", a);
+               console.log("Status brut:", a.status);
+               console.log("isPending:", a.isPending);
+               console.log("justificationPending:", a.justificationPending);
+               console.log("justified:", a.justified);
+               console.log("isJustified:", a.isJustified);
+               console.log("Status normalisé:", status);
+               console.log("Titre:", title);
+               console.log("========================");
               
               return (
                 <AbsenceJustification

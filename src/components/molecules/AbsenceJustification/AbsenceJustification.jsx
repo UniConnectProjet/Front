@@ -15,13 +15,35 @@ const AbsenceJustification = ({ justification, title, date, hours, className = "
         }
     };
 
+    // Déterminer la couleur de l'icône selon le statut
+    const getIconColor = () => {
+        if (title === "Justifiée") {
+            return "w-8 h-8 rounded-full bg-green-100 p-1";
+        } else if (title === "En cours") {
+            return "w-8 h-8 rounded-full bg-yellow-100 p-1";
+        } else {
+            return "w-8 h-8 rounded-full bg-red-100 p-1";
+        }
+    };
+
     return (
         <div className={`flex p-2 mr-4 justify-between ${className}`}>
             <div className="flex p-2 items-center">
-                <Image src={exclamation} alt="UnjustifiedAbsence" className="w-8 h-8 rounded-full" />
+                <div className={getIconColor()}>
+                    <Image src={exclamation} alt="Absence" className="w-6 h-6" />
+                </div>
                 <div className="flex flex-col justify-between p-2">
                     <Title className="text-sm font-bold text-gray-800">{date}</Title>
                     <Text>{hours}</Text>
+                    {hideButton && (
+                        <Text className={`text-xs font-medium ${
+                            title === "Justifiée" ? "text-green-600" :
+                            title === "En cours" ? "text-yellow-600" :
+                            "text-red-600"
+                        }`}>
+                            {title}
+                        </Text>
+                    )}
                 </div>
             </div>
             {!hideButton && (
