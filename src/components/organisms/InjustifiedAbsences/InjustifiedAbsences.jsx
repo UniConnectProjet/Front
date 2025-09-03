@@ -25,13 +25,6 @@ const dateLabelFR = (startISO, endISO) => {
   return `${dayCap} de ${sh} à ${eh}`;
 };
 
-const toBool = (v) =>
-  v === true || v === 1 || v === "1"
-    ? true
-    : v === false || v === 0 || v === "0"
-    ? false
-    : null;
-
 /** Normalise le statut : 'UNJUSTIFIED' | 'PENDING' | 'JUSTIFIED' */
 const normalizeStatus = (a) => {
   const s = a?.status;

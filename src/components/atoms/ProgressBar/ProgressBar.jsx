@@ -14,7 +14,6 @@ export const ProgressBar = forwardRef(
       size = "md",            // "sm" | "md" | "lg"
       className = "",
       trackClassName = "",
-      barClassName = "",
       ...rest
     },
     ref
@@ -68,7 +67,6 @@ ProgressBar.propTypes = {
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   className: PropTypes.string,
   trackClassName: PropTypes.string,
-  barClassName: PropTypes.string,
 };
 
 export default ProgressBar;

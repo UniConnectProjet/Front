@@ -62,9 +62,12 @@ export function ToastProvider({
 
   // Nettoyage
   useEffect(() => {
+    const timers = timersRef.current;
+    const raf = rafRef.current;
+    
     return () => {
-      timersRef.current.forEach((t) => clearTimeout(t));
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      timers.forEach((t) => clearTimeout(t));
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -104,7 +107,7 @@ export function useToast() {
 
 /** Un item de toast (visuel + accessibilité) */
 function ToastItem({ toast, onClose }) {
-  const { id, text, type, duration } = toast;
+  const { text, type, duration } = toast;
   const barRef = useRef(null);
 
   // petite barre de progression (optionnelle) qui “descend” avec le timeout
