@@ -198,21 +198,7 @@ const InjustifiedAbsences = () => {
                 status === "APPROVED"   ? "Justifiée" :
                                           "";
               const onClick = status === "UNJUSTIFIED" ? () => openJustify(a) : () => {};
-              const isDisabled = status !== "UNJUSTIFIED";
-              
-                             // Debug temporaire pour voir le statut
-               console.log(`=== DEBUG ABSENCE ${a.id} ===`);
-               console.log("User ID:", user?.id);
-               console.log("Données complètes:", a);
-               console.log("Status brut:", a.status);
-               console.log("isPending:", a.isPending);
-               console.log("justificationPending:", a.justificationPending);
-               console.log("justified:", a.justified);
-               console.log("isJustified:", a.isJustified);
-               console.log("Status normalisé:", status);
-               console.log("Titre:", title);
-               console.log("========================");
-              
+              const isDisabled = status !== "UNJUSTIFIED";              
               return (
                 <AbsenceJustification
                   key={a.id}
