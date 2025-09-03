@@ -58,7 +58,6 @@ const normalizeStatus = (a) => {
 };
 
 const InjustifiedAbsences = () => {
-  const { user } = useAuth();
   const [data, setData] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
   const [loading, setLoading] = useState(true);
