@@ -36,12 +36,24 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
-        // 1) tente /me directement (si cookie ACCESS_TOKEN encore valide)
-        let me = await api.get("/me/student").then(r => r.data).catch(() => null);
-        if (!me) {
-          // 2) sinon, tente un refresh (cookie REFRESH_TOKEN)
-          me = await refreshSession();
+        // 1) Tenter de récupérer les informations de base avec les rôles
+        let basicUser = await api.get("/me").then(r => r.data).catch(() => null);
+        
+        // 2) Si pas d'utilisateur de base, tenter un refresh
+        if (!basicUser) {
+          basicUser = await refreshSession();
         }
+        
+        // 3) Si on a un utilisateur, récupérer les informations spécifiques selon le rôle
+        let me = basicUser;
+        if (basicUser && basicUser.roles) {
+          if (basicUser.roles.includes('ROLE_STUDENT')) {
+            me = await api.get("/me/student").then(r => r.data).catch(() => basicUser);
+          } else if (basicUser.roles.includes('ROLE_PROFESSOR')) {
+            me = await api.get("/professors/me").then(r => r.data).catch(() => basicUser);
+          }
+        }
+        
         setUser(me ?? null);
       } catch (error) {
         // En cas d'erreur, rediriger vers la connexion
@@ -55,8 +67,19 @@ export default function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       await api.post("/login_check", { email: email.trim(), password }); // cookies posés
-      const me = await api.get("/me/student");
-      setUser(me.data ?? null);
+      
+      // 1) Récupérer les informations de base avec les rôles
+      const basicUser = await api.get("/me").then(r => r.data);
+      
+      // 2) Selon le rôle, récupérer les informations spécifiques
+      let me = basicUser;
+      if (basicUser.roles && basicUser.roles.includes('ROLE_STUDENT')) {
+        me = await api.get("/me/student").then(r => r.data);
+      } else if (basicUser.roles && basicUser.roles.includes('ROLE_PROFESSOR')) {
+        me = await api.get("/professors/me").then(r => r.data);
+      }
+      
+      setUser(me ?? null);
       showToast({ text: "Connexion réussie", type: "success" });
     } catch (error) {
       showToast({ text: "Erreur de connexion", type: "error" });
