@@ -1,5 +1,5 @@
 import React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, setLogoutCallback } from "../_services/api";
 import { refreshSession } from "../_services/auth.service";
@@ -22,11 +22,11 @@ export default function AuthProvider({ children }) {
   const { push: showToast } = useToast();
 
   // Fonction simple de déconnexion
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setUser(null);
     showToast({ text: "Session expirée. Veuillez vous reconnecter.", type: "warning", duration: 5000 });
     navigate('/', { replace: true });
-  };
+  }, [showToast, navigate]);
 
   // Enregistrer le callback de déconnexion pour l'intercepteur API
   useEffect(() => {
