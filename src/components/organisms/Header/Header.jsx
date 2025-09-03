@@ -10,7 +10,17 @@ export default function Header() {
     let alive = true;
     (async () => {
       try {
-        const r = await api.get("/me/student");
+        const meResponse = await api.get("/me");
+        const meData = typeof meResponse.data === "string" ? JSON.parse(meResponse.data) : (meResponse.data || {});
+        let endpoint = "/me";
+        if (meData.roles && Array.isArray(meData.roles)) {
+          if (meData.roles.includes("ROLE_STUDENT")) {
+            endpoint = "/me/student";
+          } else if (meData.roles.includes("ROLE_PROFESSOR")) {
+            endpoint = "/me/professor";
+          }
+        }
+        const r = await api.get(endpoint);
         const d = typeof r.data === "string" ? JSON.parse(r.data) : (r.data || {});
 
         const safe = (v) => (typeof v === "string" && v.trim().length ? v.trim() : null);
