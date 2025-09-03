@@ -29,7 +29,17 @@ const dateLabelFR = (startISO, endISO) => {
 const normalizeStatus = (a) => {
   const s = a?.status;
 
-  // Si le statut est déjà normalisé par le backend (cas de buildAbsenceBlocks)
+  // 1) Priorité aux indicateurs booléens provenant de la BDD/API
+  //    - pending en premier
+  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
+
+  //    - puis justified explicite (true -> JUSTIFIED, false -> UNJUSTIFIED)
+  const justifiedFlag = (a?.justified ?? a?.isJustified);
+  if (typeof justifiedFlag === "boolean") {
+    return justifiedFlag ? "JUSTIFIED" : "UNJUSTIFIED";
+  }
+
+  // 2) Si pas de booléens fiables, utiliser le statut déjà normalisé côté backend
   if (typeof s === "string") {
     const up = s.trim().toUpperCase();
     if (up === "PENDING") return "PENDING";
@@ -37,18 +47,13 @@ const normalizeStatus = (a) => {
     if (up === "JUSTIFIED") return "JUSTIFIED";
   }
 
-  // Vérifier les propriétés booléennes directes (cas de getMyUnjustifiedAbsences)
-  if ((a?.isPending ?? a?.justificationPending) === true) return "PENDING";
-  if ((a?.justified ?? a?.isJustified) === true) return "JUSTIFIED";
-
-  // number direct (ancien format)
+  // 3) Anciens formats
   if (typeof s === "number") {
     if (s === 4) return "PENDING";
     if (s === 3) return "UNJUSTIFIED";
     if (s === 1) return "JUSTIFIED";
   }
 
-  // string avec valeurs numériques (ancien format)
   if (typeof s === "string" && s) {
     const up = s.trim().toUpperCase();
     if (up === "4") return "PENDING";
@@ -56,7 +61,7 @@ const normalizeStatus = (a) => {
     if (up === "1") return "JUSTIFIED";
   }
   
-  // Par défaut, considérer comme injustifiée
+  // 4) Par défaut, considérer comme injustifiée
   return "UNJUSTIFIED";
 };
 
@@ -84,6 +89,15 @@ const InjustifiedAbsences = () => {
     setErr(null);
     try {
       const blocks = await getAbsenceBlocks();
+      console.log("=== DONNÉES getAbsenceBlocks ===");
+      console.log("Blocks reçus:", blocks);
+      if (blocks && blocks.length > 0) {
+        console.log("Premier block:", blocks[0]);
+        if (blocks[0].absences && blocks[0].absences.length > 0) {
+          console.log("Première absence du block:", blocks[0].absences[0]);
+        }
+      }
+      console.log("================================");
       setData(Array.isArray(blocks) ? blocks : []);
     } catch (e) {
       console.error("[InjustifiedAbsences] getAbsenceBlocks error:", e);
@@ -219,6 +233,7 @@ const InjustifiedAbsences = () => {
                   date={dateLabelFR(a.startedDate, a.endedDate)}
                   hours={durationHHMM(a.startedDate, a.endedDate)}
                   disabled={isDisabled}
+                  hideButton={view === "ALL"}
                 />
               );
             })
@@ -232,7 +247,7 @@ const InjustifiedAbsences = () => {
             <Absence
               className={`w-full ${view === "ALL" ? "ring-2 ring-primary-400 rounded-lg" : ""}`}
               title="Total des heures manquées"
-              date={totalHHMM}
+              date={`${totalHHMM}${allAbsences.length ? ` (${allAbsences.length})` : ""}`}
               onClick={() => setView("ALL")}
             />
             <Absence

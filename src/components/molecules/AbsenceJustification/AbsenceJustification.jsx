@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Button, Image, Title, Text } from "../../atoms";
 import exclamation from "../../../assets/svg/exclamation.svg";
 
-const AbsenceJustification = ({ justification, title, date, hours, className = "", disabled = false }) => {
+const AbsenceJustification = ({ justification, title, date, hours, className = "", disabled = false, hideButton = false }) => {
     // Déterminer les styles du bouton selon l'état
     const getButtonStyles = () => {
         if (disabled || title === "Justifiée") {
@@ -24,15 +24,17 @@ const AbsenceJustification = ({ justification, title, date, hours, className = "
                     <Text>{hours}</Text>
                 </div>
             </div>
-            <div className="flex p-2 justify-center items-center">
-                <Button 
-                    onClick={disabled || title === "Justifiée" || title === "En cours" ? () => {} : justification} 
-                    className={getButtonStyles()}
-                    disabled={disabled || title === "Justifiée" || title === "En cours"}
-                >
-                    {title}
-                </Button>
-            </div>
+            {!hideButton && (
+                <div className="flex p-2 justify-center items-center">
+                    <Button 
+                        onClick={disabled || title === "Justifiée" || title === "En cours" ? () => {} : justification} 
+                        className={getButtonStyles()}
+                        disabled={disabled || title === "Justifiée" || title === "En cours"}
+                    >
+                        {title}
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }
@@ -44,6 +46,7 @@ AbsenceJustification.propTypes = {
     hours: PropTypes.string.isRequired,
     className: PropTypes.string,
     disabled: PropTypes.bool,
+    hideButton: PropTypes.bool,
 };
 
 export default AbsenceJustification;
