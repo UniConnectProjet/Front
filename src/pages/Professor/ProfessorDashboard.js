@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Image } from "../../components/atoms";
-import user from "../../assets/svg/user.svg";
 import { SideBar, Header } from '../../components/organisms';
 import { Menu as MenuIcon, X, Calendar, Users, BookOpen, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses, DailyCourses } from '../../components/organisms';
@@ -9,7 +9,7 @@ import WeekSchedule from '../../components/organisms/ProfessorDashboard/WeekSche
 
 const Home = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { user } = useAuth();
+    const { user: currentUser } = useAuth();
 
     return (
         <div className="flex">
@@ -43,8 +43,8 @@ const Home = () => {
 
                 <Header />
                 
-                {/* Contenu conditionnel selon le rôle */}
-                {user?.roles?.includes('ROLE_PROFESSOR') ? (
+                                    {/* Contenu conditionnel selon le rôle */}
+                    {currentUser?.roles?.includes('ROLE_PROFESSOR') ? (
                     // Interface professeur
                     <div className="flex-1 bg-gray-50 p-4 lg:p-8 overflow-y-auto">
                         <div className="max-w-6xl mx-auto">

@@ -31,7 +31,7 @@ export default function AuthProvider({ children }) {
   // Enregistrer le callback de déconnexion pour l'intercepteur API
   useEffect(() => {
     setLogoutCallback(handleLogout);
-  }, []);
+  }, [handleLogout]);
 
   useEffect(() => {
     (async () => {

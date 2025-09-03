@@ -3,7 +3,7 @@ import { getProfessorSessions } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 import { DateNavigation, LoadingSpinner } from '../../atoms';
 import { DailySessions } from '../../molecules';
-import SessionRow from '../ProfessorDashboard/SessionRow';
+
 import RollModal from '../ProfessorDashboard/RollModal';
 import GradesModal from '../ProfessorDashboard/GradesModal';
 
