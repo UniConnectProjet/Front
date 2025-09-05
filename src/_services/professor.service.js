@@ -52,6 +52,15 @@ export async function getSessionRoster(sessionId) {
 }
 
 /**
+ * Récupère les absences enregistrées pour une séance
+ * GET /api/prof/sessions/{id}/roll
+ */
+export async function getSessionRoll(sessionId) {
+  const { data } = await api.get(`/prof/sessions/${sessionId}/roll`);
+  return data;
+}
+
+/**
  * Enregistre l'appel (présence/absence/retard) pour une séance
  * POST /api/prof/sessions/{id}/roll
  */

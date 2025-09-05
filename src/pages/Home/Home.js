@@ -4,7 +4,6 @@ import user from "../../assets/svg/user.svg";
 import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses, DailyCourses } from '../../components/organisms';
 import { Menu as MenuIcon, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthProvider';
-import WeekSchedule from '../../components/organisms/ProfessorDashboard/WeekSchedule';
 
 
 const Home = () => {
@@ -48,19 +47,7 @@ const Home = () => {
                     // Interface professeur
                     <div className="flex-1 bg-gray-50 p-4 lg:p-8 overflow-y-auto">
                         <div className="max-w-6xl mx-auto">
-                                                            {/* TITRE */}
-                                <div className="mb-8">
-                                    <h1 className="text-3xl font-bold text-gray-900">Dashboard Professeur</h1>
-                                    <p className="text-gray-600 mt-2">Accédez à vos outils de gestion pédagogique</p>
-                                </div>
-
-                                {/* COURS DU JOUR */}
-                                <div className="mb-8">
-                                    <DailyCourses />
-                                </div>
-
-                            {/* EMPLOI DU TEMPS DE LA SEMAINE */}
-                            <WeekSchedule />
+                            <DailyCourses />
                         </div>
                     </div>
                 ) : (

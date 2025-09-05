@@ -3,7 +3,6 @@ import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, Header } from '../../components/organisms';
 import { Menu as MenuIcon, X } from 'lucide-react';
-import WeekSchedule from '../../components/organisms/ProfessorDashboard/WeekSchedule';
 
 const ProfessorSchedule = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,8 +24,6 @@ const ProfessorSchedule = () => {
                         <p className="text-gray-600 mt-2">Consultez votre planning de la semaine</p>
                     </div>
 
-                    {/* EMPLOI DU TEMPS DE LA SEMAINE */}
-                    <WeekSchedule />
                 </div>
             </div>
 

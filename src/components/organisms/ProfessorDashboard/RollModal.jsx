@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { getSessionRoster, saveSessionRoll } from '../../../_services/professor.service';
+import { getSessionRoster, getSessionRoll, saveSessionRoll } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const RollModal = ({ session, onClose, onSuccess }) => {
@@ -19,13 +19,34 @@ const RollModal = ({ session, onClose, onSuccess }) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await getSessionRoster(session.id);
-            setStudents(data.students || []);
             
-            // Initialiser les présences par défaut
+            // Charger la liste des étudiants et les absences existantes en parallèle
+            const [rosterData, rollData] = await Promise.all([
+                getSessionRoster(session.id),
+                getSessionRoll(session.id).catch(() => []) // Si pas d'absences, retourner un tableau vide
+            ]);
+            
+            setStudents(rosterData.students || []);
+            
+            // Créer un map des absences existantes par studentId
+            const existingRolls = {};
+            if (Array.isArray(rollData)) {
+                rollData.forEach(roll => {
+                    if (roll.studentId) {
+                        existingRolls[roll.studentId] = {
+                            status: roll.status || 'PRESENT',
+                            minutesLate: roll.minutesLate || 0,
+                            justified: roll.justified || false,
+                            note: roll.note || ''
+                        };
+                    }
+                });
+            }
+            
+            // Initialiser les présences (existantes ou par défaut)
             const defaultAttendances = {};
-            data.students?.forEach(student => {
-                defaultAttendances[student.studentId] = {
+            rosterData.students?.forEach(student => {
+                defaultAttendances[student.studentId] = existingRolls[student.studentId] || {
                     status: 'PRESENT',
                     minutesLate: 0,
                     justified: false,
@@ -34,10 +55,10 @@ const RollModal = ({ session, onClose, onSuccess }) => {
             });
             setAttendances(defaultAttendances);
         } catch (err) {
-            console.error('Erreur lors du chargement des étudiants:', err);
-            setError('Impossible de charger la liste des étudiants');
+            console.error('Erreur lors du chargement des données:', err);
+            setError('Impossible de charger les données de la séance');
             showToast({ 
-                text: 'Erreur lors du chargement des étudiants', 
+                text: 'Erreur lors du chargement des données', 
                 type: 'error' 
             });
         } finally {
