@@ -62,10 +62,11 @@ export async function getSessionRoll(sessionId) {
 
 /**
  * Enregistre l'appel (présence/absence/retard) pour une séance
- * POST /api/prof/sessions/{id}/roll
+ * POST /api/prof/roll/save
  */
 export async function saveSessionRoll(sessionId, attendances) {
-  const { data } = await api.post(`/prof/sessions/${sessionId}/roll`, {
+  const { data } = await api.post('/prof/roll/save', {
+    sessionId,
     attendances
   });
   return data;

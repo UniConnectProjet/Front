@@ -112,11 +112,16 @@ const RollModal = ({ session, onClose, onSuccess }) => {
         try {
             setSaving(true);
             
-            const attendanceData = students.map(student => ({
-                studentId: student.studentId,
-                userId: student.userId,
-                ...attendances[student.studentId]
-            }));
+            // Convertir le tableau d'étudiants en objet attendances (clé = studentId)
+            const attendanceData = {};
+            students.forEach(student => {
+                attendanceData[student.studentId] = {
+                    status: attendances[student.studentId]?.status || 'PRESENT',
+                    minutesLate: attendances[student.studentId]?.minutesLate || 0,
+                    justified: attendances[student.studentId]?.justified || false,
+                    justificationNote: attendances[student.studentId]?.note || ''
+                };
+            });
 
             await saveSessionRoll(session.id, attendanceData);
             onSuccess();
