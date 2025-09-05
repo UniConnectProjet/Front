@@ -99,3 +99,71 @@ export async function getCategories() {
   const { data } = await api.get("/categories");
   return data;
 }
+
+/**
+ * Récupère toutes les classes
+ * GET /api/classes
+ */
+export async function getClasses() {
+  const { data } = await api.get("/classes");
+  return data;
+}
+
+/**
+ * Récupère les cours du professeur connecté
+ * GET /api/prof/courses
+ */
+export async function getMyCourses() {
+  const { data } = await api.get("/prof/courses");
+  return data;
+}
+
+/**
+ * Récupère les classes du professeur connecté
+ * GET /api/prof/classes
+ */
+export async function getMyClasses() {
+  const { data } = await api.get("/prof/classes");
+  return data;
+}
+
+/**
+ * Récupère les étudiants d'une classe
+ * GET /api/classes/{classId}
+ */
+export async function getStudentsByClass(classId) {
+  const { data } = await api.get(`/prof/classes/${classId}/students`);
+  return data;
+}
+
+/**
+ * Récupère les cours d'une classe spécifique pour le professeur connecté
+ * GET /api/prof/classes/{classId}/courses
+ */
+export async function getClassCourses(classId) {
+  const { data } = await api.get(`/prof/classes/${classId}/courses`);
+  return data;
+}
+
+/**
+ * Enregistre les notes pour une classe et un cours
+ * POST /api/test/grades
+ */
+export async function saveGrades(classId, courseId, assignments, grades) {
+  const { data } = await api.post('/grade/save', {
+    classId,
+    courseId,
+    assignments,
+    grades
+  });
+  return data;
+}
+
+/**
+ * Récupère les notes d'un étudiant
+ * GET /api/test/student/{studentId}/grades
+ */
+export async function getStudentGrades(studentId) {
+  const { data } = await api.get(`/grade/student/${studentId}`);
+  return data;
+}

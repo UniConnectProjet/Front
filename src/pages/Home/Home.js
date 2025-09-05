@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses, DailyCourses } from '../../components/organisms';
+import { ClassGrades } from '../../components/organisms/ProfessorDashboard';
 import { Menu as MenuIcon, X } from 'lucide-react';
 import { useAuth } from '../../auth/AuthProvider';
 
@@ -46,8 +47,14 @@ const Home = () => {
                     {currentUser?.roles?.includes('ROLE_PROFESSOR') ? (
                     // Interface professeur
                     <div className="flex-1 bg-gray-50 p-4 lg:p-8 overflow-y-auto">
-                        <div className="max-w-6xl mx-auto">
+                        <div className="max-w-7xl mx-auto space-y-8">
+                            {/* Cours du jour */}
                             <DailyCourses />
+                            
+                            {/* Composant de gestion des notes par classe */}
+                            <div className="max-w-4xl mx-auto">
+                                <ClassGrades />
+                            </div>
                         </div>
                     </div>
                 ) : (

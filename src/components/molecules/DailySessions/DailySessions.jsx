@@ -6,7 +6,6 @@ import { BookOpen } from 'lucide-react';
 const DailySessions = ({ 
     sessions, 
     onRollClick, 
-    onGradesClick, 
     formatTime,
     isToday = false,
     selectedDateFormatted = "",
@@ -39,7 +38,6 @@ const DailySessions = ({
                         key={session.id}
                         session={session}
                         onRollClick={onRollClick}
-                        onGradesClick={onGradesClick}
                         formatTime={formatTime}
                     />
                 ))}

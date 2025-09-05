@@ -4,7 +4,6 @@ import { Clock, MapPin, Users } from 'lucide-react';
 const SessionCard = ({ 
     session, 
     onRollClick, 
-    onGradesClick, 
     formatTime,
     className = "" 
 }) => {
@@ -47,22 +46,16 @@ const SessionCard = ({
             </div>
 
             {/* Actions */}
-            <div className="flex space-x-2">
+            <div className="flex justify-center">
                 <button
                     onClick={() => onRollClick(session)}
-                    className={`flex-1 px-3 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                         hasRoll 
                             ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                             : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                 >
                     {hasRoll ? 'Présence validée' : 'Prendre la présence'}
-                </button>
-                <button
-                    onClick={() => onGradesClick(session)}
-                    className="flex-1 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                    Saisir notes
                 </button>
             </div>
         </div>

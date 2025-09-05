@@ -126,7 +126,6 @@ const DailyCourses = ({ className = "" }) => {
                 <DailySessions
                     sessions={sessions}
                     onRollClick={handleRollClick}
-                    onGradesClick={handleGradesClick}
                     formatTime={formatTime}
                     isToday={isToday}
                     selectedDateFormatted={selectedDateFormatted}
