@@ -22,9 +22,9 @@ const Menu = ({ className = '' }) => {
             case 'timetable':
                 navigate('/planning');
                 break;
-            /*case 'chat':
+            case 'chat':
                 navigate('/chat');
-                break;*/
+                break;
             case 'missing':
                 navigate('/absences');
                 break;
@@ -47,7 +47,7 @@ const Menu = ({ className = '' }) => {
                 <Button className={`menu-button ${activeButton === 'timetable' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('timetable')}>
                     <img src={timetableIcon} alt="Emploi du temps" className="w-8 h-8" />
                 </Button>
-                <Button className={`menu-button ${activeButton === 'chat' ? 'active' : ''} p-4`} onClick={() => handleButtonClick()}>
+                <Button className={`menu-button ${activeButton === 'chat' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('chat')}>
                     <img src={chatIcon} alt="Chat" className="w-8 h-8" />
                 </Button>
                 <Button className={`menu-button ${activeButton === 'missing' ? 'active' : ''} p-4`} onClick={() => handleButtonClick('missing')}>

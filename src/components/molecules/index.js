@@ -11,6 +11,11 @@ import DashboardGrid from "./DashboardGrid";
 import QuickActions from "./QuickActions";
 import WeekScheduleGrid from "./WeekScheduleGrid";
 import DailySessions from "./DailySessions";
+import ConversationItem from "./ConversationItem";
+import MessageComposer from "./MessageComposer";
+import MessageList from "./MessageList";
+import UserSelector from "./UserSelector";
+import UserCard from "./UserCard";
 
 export { 
     Form, 
@@ -25,5 +30,10 @@ export {
     DashboardGrid,
     QuickActions,
     WeekScheduleGrid,
-    DailySessions
+    DailySessions,
+    ConversationItem,
+    MessageComposer,
+    MessageList,
+    UserSelector,
+    UserCard
 };

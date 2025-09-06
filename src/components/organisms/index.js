@@ -9,5 +9,9 @@ import InjustifiedAbsences from "./InjustifiedAbsences/InjustifiedAbsences";
 import ModalShell from "./ModalShell/ModalShell";
 import AbsenceJustifyModal from "./AbsenceJustifyModal/AbsenceJustifyModal";
 import DailyCourses from "./DailyCourses";
+import ConversationsList from "./ConversationsList";
+import ChatWindow from "./ChatWindow";
+import ChatLayout from "./ChatLayout";
+import NewConversationModal from "./NewConversationModal";
 
-export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses, InjustifiedAbsences, ModalShell, AbsenceJustifyModal, DailyCourses };
+export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses, InjustifiedAbsences, ModalShell, AbsenceJustifyModal, DailyCourses, ConversationsList, ChatWindow, ChatLayout, NewConversationModal };

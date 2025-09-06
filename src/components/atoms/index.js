@@ -16,6 +16,10 @@ import DateNavigation from "./DateNavigation";
 import EmptyState from "./EmptyState";
 import LoadingSpinner from "./LoadingSpinner";
 import SessionCard from "./SessionCard";
+import Avatar from "./Avatar";
+import MessageBubble from "./MessageBubble";
+import StatusIndicator from "./StatusIndicator";
+import MessageInput from "./MessageInput";
 
 export { 
     Button, 
@@ -35,5 +39,9 @@ export {
     DateNavigation,
     EmptyState,
     LoadingSpinner,
-    SessionCard
+    SessionCard,
+    Avatar,
+    MessageBubble,
+    StatusIndicator,
+    MessageInput
 };
