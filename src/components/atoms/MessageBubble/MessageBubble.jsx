@@ -23,9 +23,9 @@ const MessageBubble = ({
   };
 
   return (
-    <div className={`flex ${isOwn ? 'justify-start' : 'justify-end'} ${className}`}>
-      <div className={`flex max-w-xs lg:max-w-md ${isOwn ? 'flex-row' : 'flex-row-reverse'}`}>
-        {showAvatar && isOwn && (
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${className}`}>
+      <div className={`flex max-w-xs lg:max-w-md ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+        {showAvatar && !isOwn && (
           <div className="flex-shrink-0 mr-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-sm font-medium text-white shadow-md">
               {message.sender?.firstName?.charAt(0) || message.sender?.name?.charAt(0) || '?'}
@@ -33,7 +33,7 @@ const MessageBubble = ({
           </div>
         )}
         
-        <div className={`flex flex-col ${isOwn ? 'items-start' : 'items-end'}`}>
+        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
           {/* Nom de l'expéditeur pour les messages des autres */}
           {!isOwn && showAvatar && (
             <div className="text-xs text-gray-600 mb-1 px-1">
@@ -44,8 +44,8 @@ const MessageBubble = ({
           <div
             className={`px-4 py-3 rounded-2xl shadow-sm relative ${
               isOwn 
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-bl-md' 
-                : `bg-white text-gray-900 rounded-br-md border border-gray-200 ${
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md' 
+                : `bg-white text-gray-900 rounded-bl-md border border-gray-200 ${
                     !message.isRead ? 'ring-2 ring-blue-100 bg-blue-50' : ''
                   }`
             }`}
@@ -61,12 +61,12 @@ const MessageBubble = ({
             
             {/* Indicateur de nouveau message */}
             {!isOwn && !message.isRead && (
-              <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
             )}
           </div>
           
           {showTime && (
-            <div className={`text-xs mt-1 px-1 flex items-center ${isOwn ? 'text-blue-400 text-left justify-start' : 'text-gray-500 text-right justify-end'}`}>
+            <div className={`text-xs mt-1 px-1 flex items-center ${isOwn ? 'text-blue-400 text-right justify-end' : 'text-gray-500 text-left justify-start'}`}>
               <span>{formatTime(message.createdAt)}</span>
               {isOwn && showReadStatus && (
                 <span className="ml-1">
