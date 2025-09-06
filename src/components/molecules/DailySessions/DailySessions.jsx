@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import SessionCard from '../../atoms/SessionCard';
 import { EmptyState } from '../../atoms';
 import { BookOpen } from 'lucide-react';
@@ -15,10 +16,10 @@ const DailySessions = ({
         return (
             <EmptyState
                 icon={BookOpen}
-                title={isToday ? 'Aucun cours aujourd\'hui' : 'Aucun cours ce jour'}
+                title={isToday ? 'Aucun cours aujourd&apos;hui' : 'Aucun cours ce jour'}
                 description={
                     isToday 
-                        ? 'Vous n\'avez pas de séances programmées pour aujourd\'hui.'
+                        ? 'Vous n&apos;avez pas de séances programmées pour aujourd&apos;hui.'
                         : 'Vous n\'avez pas de séances programmées pour cette date.'
                 }
                 className={className}
@@ -44,6 +45,23 @@ const DailySessions = ({
             </div>
         </div>
     );
+};
+
+DailySessions.propTypes = {
+    sessions: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        course: PropTypes.string.isRequired,
+        room: PropTypes.string,
+        startAt: PropTypes.string.isRequired,
+        endAt: PropTypes.string.isRequired,
+        classe: PropTypes.string,
+        hasRoll: PropTypes.bool
+    })).isRequired,
+    onRollClick: PropTypes.func.isRequired,
+    formatTime: PropTypes.func.isRequired,
+    isToday: PropTypes.bool,
+    selectedDateFormatted: PropTypes.string,
+    className: PropTypes.string
 };
 
 export default DailySessions;

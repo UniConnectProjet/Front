@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Image } from "../../components/atoms";
-import user from "../../assets/svg/user.svg";
 import { SideBar, Header } from '../../components/organisms';
 import { Menu as MenuIcon, X, BookOpen } from 'lucide-react';
 import { getProfessorSessions } from '../../_services/professor.service';
@@ -145,10 +143,10 @@ const ProfessorSessions = () => {
                     ) : sessions.length === 0 ? (
                         <EmptyState
                             icon={BookOpen}
-                            title={isToday ? 'Aucun cours aujourd\'hui' : 'Aucun cours ce jour'}
+                            title={isToday ? 'Aucun cours aujourd&apos;hui' : 'Aucun cours ce jour'}
                             description={
                                 isToday 
-                                    ? 'Vous n\'avez pas de séances programmées pour aujourd\'hui.'
+                                    ? 'Vous n&apos;avez pas de séances programmées pour aujourd&apos;hui.'
                                     : 'Vous n\'avez pas de séances programmées pour cette date.'
                             }
                         />

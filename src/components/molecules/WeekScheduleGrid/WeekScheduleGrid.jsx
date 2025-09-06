@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Clock, MapPin } from 'lucide-react';
 
 const WeekScheduleGrid = ({ sessions, className = "" }) => {
@@ -87,6 +88,18 @@ const WeekScheduleGrid = ({ sessions, className = "" }) => {
             ))}
         </div>
     );
+};
+
+WeekScheduleGrid.propTypes = {
+    sessions: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        course: PropTypes.string.isRequired,
+        room: PropTypes.string,
+        startAt: PropTypes.string.isRequired,
+        endAt: PropTypes.string.isRequired,
+        classe: PropTypes.string
+    })).isRequired,
+    className: PropTypes.string
 };
 
 export default WeekScheduleGrid;

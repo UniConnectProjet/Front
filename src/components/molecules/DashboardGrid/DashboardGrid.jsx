@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import DashboardCard from '../../atoms/DashboardCard';
 
 const DashboardGrid = ({ cards, className = "" }) => {
@@ -17,6 +18,18 @@ const DashboardGrid = ({ cards, className = "" }) => {
             ))}
         </div>
     );
+};
+
+DashboardGrid.propTypes = {
+    cards: PropTypes.arrayOf(PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        icon: PropTypes.elementType.isRequired,
+        onClick: PropTypes.func.isRequired,
+        color: PropTypes.string,
+        hoverColor: PropTypes.string
+    })).isRequired,
+    className: PropTypes.string
 };
 
 export default DashboardGrid;

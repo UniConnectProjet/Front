@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { BookOpen, Plus, Save, X } from 'lucide-react';
 import { getMyClasses, getStudentsByClass, saveGrades } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
@@ -470,6 +471,10 @@ const ClassGrades = ({ className = "" }) => {
             )}
         </div>
     );
+};
+
+ClassGrades.propTypes = {
+    className: PropTypes.string
 };
 
 export default ClassGrades;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { X, Users, Clock } from 'lucide-react';
 import { getSessionRoster, getSessionRoll, saveSessionRoll } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
@@ -311,6 +312,16 @@ const RollModal = ({ session, onClose, onSuccess }) => {
             </div>
         </div>
     );
+};
+
+RollModal.propTypes = {
+    session: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        course: PropTypes.string.isRequired,
+        classe: PropTypes.string.isRequired
+    }).isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSuccess: PropTypes.func.isRequired
 };
 
 export default RollModal;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { getProfessorSessions } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 import { DateNavigation, LoadingSpinner } from '../../atoms';
@@ -146,6 +147,10 @@ const DailyCourses = ({ className = "" }) => {
             )}
         </div>
     );
+};
+
+DailyCourses.propTypes = {
+    className: PropTypes.string
 };
 
 export default DailyCourses;

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DateNavigation = ({ 
@@ -27,7 +28,7 @@ const DateNavigation = ({
                     </span>
                     {isToday && (
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            Aujourd'hui
+                            Aujourd&apos;hui
                         </span>
                     )}
                 </div>
@@ -49,7 +50,7 @@ const DateNavigation = ({
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                     >
-                        Aujourd'hui
+                        Aujourd&apos;hui
                     </button>
                     
                     <button
@@ -63,6 +64,15 @@ const DateNavigation = ({
             </div>
         </div>
     );
+};
+
+DateNavigation.propTypes = {
+    selectedDate: PropTypes.instanceOf(Date).isRequired,
+    onPreviousDay: PropTypes.func.isRequired,
+    onNextDay: PropTypes.func.isRequired,
+    onToday: PropTypes.func.isRequired,
+    isToday: PropTypes.bool,
+    className: PropTypes.string
 };
 
 export default DateNavigation;

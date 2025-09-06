@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Clock, MapPin, BookOpen, CheckCircle, Users } from 'lucide-react';
 
 const SessionRow = ({ session, onRollClick, formatTime }) => {
@@ -64,6 +65,19 @@ const SessionRow = ({ session, onRollClick, formatTime }) => {
             </div>
         </div>
     );
+};
+
+SessionRow.propTypes = {
+    session: PropTypes.shape({
+        startAt: PropTypes.string.isRequired,
+        endAt: PropTypes.string.isRequired,
+        room: PropTypes.string,
+        course: PropTypes.string,
+        classe: PropTypes.string,
+        hasRoll: PropTypes.bool
+    }).isRequired,
+    onRollClick: PropTypes.func.isRequired,
+    formatTime: PropTypes.func.isRequired
 };
 
 export default SessionRow;

@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Button } from '../../atoms';
 
 const QuickActions = ({ actions, className = "" }) => {
@@ -22,6 +23,17 @@ const QuickActions = ({ actions, className = "" }) => {
             ))}
         </div>
     );
+};
+
+QuickActions.propTypes = {
+    actions: PropTypes.arrayOf(PropTypes.shape({
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        onClick: PropTypes.func.isRequired,
+        buttonText: PropTypes.string.isRequired,
+        buttonClassName: PropTypes.string
+    })).isRequired,
+    className: PropTypes.string
 };
 
 export default QuickActions;

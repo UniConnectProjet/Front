@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const DashboardCard = ({ 
     title, 
@@ -25,6 +26,16 @@ const DashboardCard = ({
             </p>
         </div>
     );
+};
+
+DashboardCard.propTypes = {
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    icon: PropTypes.elementType.isRequired,
+    onClick: PropTypes.func.isRequired,
+    color: PropTypes.string,
+    hoverColor: PropTypes.string,
+    className: PropTypes.string
 };
 
 export default DashboardCard;

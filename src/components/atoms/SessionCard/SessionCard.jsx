@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Clock, MapPin, Users } from 'lucide-react';
 
 const SessionCard = ({ 
@@ -60,6 +61,20 @@ const SessionCard = ({
             </div>
         </div>
     );
+};
+
+SessionCard.propTypes = {
+    session: PropTypes.shape({
+        course: PropTypes.string.isRequired,
+        room: PropTypes.string,
+        startAt: PropTypes.string.isRequired,
+        endAt: PropTypes.string.isRequired,
+        classe: PropTypes.string,
+        hasRoll: PropTypes.bool
+    }).isRequired,
+    onRollClick: PropTypes.func.isRequired,
+    formatTime: PropTypes.func.isRequired,
+    className: PropTypes.string
 };
 
 export default SessionCard;

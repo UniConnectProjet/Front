@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const EmptyState = ({ 
     icon: Icon, 
@@ -19,6 +20,14 @@ const EmptyState = ({
             {action && action}
         </div>
     );
+};
+
+EmptyState.propTypes = {
+    icon: PropTypes.elementType,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    action: PropTypes.node,
+    className: PropTypes.string
 };
 
 export default EmptyState;

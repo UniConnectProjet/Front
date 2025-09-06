@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, PenTool, Star, Hash, MessageSquare } from 'lucide-react';
+import PropTypes from 'prop-types';
+import { X, PenTool, Star, Hash } from 'lucide-react';
 import { getSessionRoster, saveSessionGrades, getCategories } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
@@ -331,6 +332,16 @@ const GradesModal = ({ session, onClose, onSuccess }) => {
             </div>
         </div>
     );
+};
+
+GradesModal.propTypes = {
+    session: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+        course: PropTypes.string.isRequired,
+        classe: PropTypes.string.isRequired
+    }).isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSuccess: PropTypes.func.isRequired
 };
 
 export default GradesModal;

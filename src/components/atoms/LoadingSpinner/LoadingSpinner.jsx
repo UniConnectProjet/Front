@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const LoadingSpinner = ({ 
     size = "medium", 
@@ -17,6 +18,12 @@ const LoadingSpinner = ({
             {text && <span className="ml-2 text-gray-600">{text}</span>}
         </div>
     );
+};
+
+LoadingSpinner.propTypes = {
+    size: PropTypes.oneOf(['small', 'medium', 'large']),
+    text: PropTypes.string,
+    className: PropTypes.string
 };
 
 export default LoadingSpinner;
