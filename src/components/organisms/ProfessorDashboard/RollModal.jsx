@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Users, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Users, Clock } from 'lucide-react';
 import { getSessionRoster, getSessionRoll, saveSessionRoll } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
@@ -11,11 +11,7 @@ const RollModal = ({ session, onClose, onSuccess }) => {
     const [error, setError] = useState(null);
     const { push: showToast } = useToast();
 
-    useEffect(() => {
-        loadRoster();
-    }, [session.id]);
-
-    const loadRoster = async () => {
+    const loadRoster = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -64,7 +60,11 @@ const RollModal = ({ session, onClose, onSuccess }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [session.id, showToast]);
+
+    useEffect(() => {
+        loadRoster();
+    }, [session.id, loadRoster]);
 
     const handleStatusChange = (studentId, status) => {
         setAttendances(prev => ({
@@ -136,31 +136,7 @@ const RollModal = ({ session, onClose, onSuccess }) => {
         }
     };
 
-    const getStatusIcon = (status) => {
-        switch (status) {
-            case 'PRESENT':
-                return <CheckCircle className="w-5 h-5 text-green-600" />;
-            case 'ABSENT':
-                return <XCircle className="w-5 h-5 text-red-600" />;
-            case 'LATE':
-                return <AlertCircle className="w-5 h-5 text-yellow-600" />;
-            default:
-                return <CheckCircle className="w-5 h-5 text-gray-400" />;
-        }
-    };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'PRESENT':
-                return 'bg-green-100 text-green-800 border-green-200';
-            case 'ABSENT':
-                return 'bg-red-100 text-red-800 border-red-200';
-            case 'LATE':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Image } from "../../components/atoms";
-import user from "../../assets/svg/user.svg";
+import React, { useState } from 'react';
 import { SideBar, Header } from '../../components/organisms';
 import { Menu as MenuIcon, X } from 'lucide-react';
 

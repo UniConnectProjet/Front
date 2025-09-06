@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Plus, Save, X } from 'lucide-react';
-import { getMyClasses, getStudentsByClass, getClassCourses, saveGrades } from '../../../_services/professor.service';
+import { getMyClasses, getStudentsByClass, saveGrades } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const ClassGrades = ({ className = "" }) => {
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(null);
-    const [selectedCourse, setSelectedCourse] = useState(null);
     const [students, setStudents] = useState([]);
-    const [courses, setCourses] = useState([]);
     const [assignments, setAssignments] = useState([]);
-    const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [grades, setGrades] = useState({});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -24,12 +21,7 @@ const ClassGrades = ({ className = "" }) => {
     });
     const { push: showToast } = useToast();
 
-    // Récupérer les classes au chargement
-    useEffect(() => {
-        loadClasses();
-    }, []);
-
-    const loadClasses = async () => {
+    const loadClasses = useCallback(async () => {
         try {
             const data = await getMyClasses();
             setClasses(data || []);
@@ -40,26 +32,24 @@ const ClassGrades = ({ className = "" }) => {
                 type: 'error' 
             });
         }
-    };
+    }, [showToast]);
+
+    // Récupérer les classes au chargement
+    useEffect(() => {
+        loadClasses();
+    }, [loadClasses]);
 
     const loadStudents = async (classId) => {
         try {
             setLoading(true);
             setError(null);
             
-            // Charger les étudiants et les cours en parallèle
-            const [studentsData, coursesData] = await Promise.all([
-                getStudentsByClass(classId),
-                getClassCourses(classId)
-            ]);
+            // Charger les étudiants
+            const studentsData = await getStudentsByClass(classId);
             
             // Extraire les étudiants de la réponse API
             const studentsList = studentsData.students || [];
             setStudents(studentsList);
-            
-            // Extraire les cours de la réponse API
-            const coursesList = coursesData.courses || [];
-            setCourses(coursesList);
             
             // Simuler la récupération des devoirs (pour l'instant)
             const mockAssignments = [
@@ -95,24 +85,15 @@ const ClassGrades = ({ className = "" }) => {
     const handleClassChange = (classId) => {
         const selected = classes.find(c => c.id === classId);
         setSelectedClass(selected);
-        setSelectedCourse(null); // Reset course selection
         if (classId) {
             loadStudents(classId);
         } else {
             setStudents([]);
-            setCourses([]);
             setAssignments([]);
             setGrades({});
         }
     };
 
-    const handleCourseChange = (courseId) => {
-        const selected = courses.find(c => c.id === courseId);
-        setSelectedCourse(selected);
-        // Reset assignments and grades when course changes
-        setAssignments([]);
-        setGrades({});
-    };
 
     const handleGradeChange = (studentId, assignmentId, field, value) => {
         setGrades(prev => ({
@@ -183,13 +164,6 @@ const ClassGrades = ({ className = "" }) => {
             return;
         }
 
-        if (!selectedCourse) {
-            showToast({ 
-                text: 'Veuillez sélectionner un cours', 
-                type: 'error' 
-            });
-            return;
-        }
 
         try {
             setSaving(true);
@@ -221,7 +195,7 @@ const ClassGrades = ({ className = "" }) => {
             }
 
             // Enregistrer les notes
-            const result = await saveGrades(selectedClass.id, selectedCourse.id, assignments, validGrades);
+            const result = await saveGrades(selectedClass.id, null, assignments, validGrades);
             
             showToast({ 
                 text: result.message || 'Notes enregistrées avec succès', 
@@ -292,30 +266,10 @@ const ClassGrades = ({ className = "" }) => {
                     ))}
                 </select>
                 
-                {/* Sélection du cours */}
-                {selectedClass && courses.length > 0 && (
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Sélectionner un cours
-                        </label>
-                        <select
-                            value={selectedCourse?.id || ''}
-                            onChange={(e) => handleCourseChange(parseInt(e.target.value) || null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Choisir un cours...</option>
-                            {courses.map(course => (
-                                <option key={course.id} value={course.id}>
-                                    {course.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
             </div>
 
             {/* Grille des notes */}
-            {selectedClass && selectedCourse && (
+            {selectedClass && (
                 <div className="overflow-x-auto">
                     {loading ? (
                         <div className="flex justify-center items-center py-8">

@@ -40,10 +40,6 @@ const DailyCourses = ({ className = "" }) => {
         setModalType('roll');
     };
 
-    const handleGradesClick = (session) => {
-        setSelectedSession(session);
-        setModalType('grades');
-    };
 
     const handleModalClose = () => {
         setSelectedSession(null);
