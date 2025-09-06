@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { X, PenTool, Star, Hash } from 'lucide-react';
 import { getSessionRoster, saveSessionGrades, getCategories } from '../../../_services/professor.service';
@@ -13,11 +13,7 @@ const GradesModal = ({ session, onClose, onSuccess }) => {
     const [error, setError] = useState(null);
     const { push: showToast } = useToast();
 
-    useEffect(() => {
-        loadData();
-    }, [session.id]);
-
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -53,7 +49,11 @@ const GradesModal = ({ session, onClose, onSuccess }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [session.id, showToast]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleScoreChange = (studentId, score) => {
         const value = Math.max(0, Math.min(parseFloat(score) || 0, 20));

@@ -112,7 +112,7 @@ const NextDayCourses = ({ className = "" }) => {
     })();
 
     return () => { ignore = true; };
-  }, []);
+  }, [user?.roles]);
 
   if (loading) {
     return (
