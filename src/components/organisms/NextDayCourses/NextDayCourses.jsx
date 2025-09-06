@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
 import { api } from "../../../_services/api";
+import { useAuth } from "../../../auth/AuthProvider";
 
 const EventRow = ({ title, start, end, professor, location }) => (
   <div className="bg-blue-100 p-3 mb-2 rounded">
@@ -53,9 +54,16 @@ const NextDayCourses = ({ className = "" }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     let ignore = false;
+
+    // Ne pas charger les cours si l'utilisateur est un professeur
+    if (user?.roles?.includes('ROLE_PROFESSOR')) {
+      setLoading(false);
+      return;
+    }
 
     const resolveStudentId = async () => {
       try {
@@ -104,7 +112,7 @@ const NextDayCourses = ({ className = "" }) => {
     })();
 
     return () => { ignore = true; };
-  }, []);
+  }, [user?.roles]);
 
   if (loading) {
     return (

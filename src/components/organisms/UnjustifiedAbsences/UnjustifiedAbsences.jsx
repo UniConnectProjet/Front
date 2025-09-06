@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
 import { getAbsenceBlocks } from "../../../_services/student.service";
+import { useAuth } from "../../../auth/AuthProvider";
 
 const toBool = (v) =>
   v === true || v === 1 || v === "1"
@@ -37,10 +38,17 @@ export default function UnjustifiedAbsences({ absences: absencesProp, studentId,
   const [absences, setAbsences] = useState(absencesProp ?? []);
   const [loading, setLoading] = useState(!absencesProp);
   const [err, setErr] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     let ignore = false;
     if (absencesProp) return; // controlled via prop
+    
+    // Ne pas charger les absences si l'utilisateur est un professeur
+    if (user?.roles?.includes('ROLE_PROFESSOR')) {
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {
@@ -71,7 +79,7 @@ export default function UnjustifiedAbsences({ absences: absencesProp, studentId,
     })();
 
     return () => { ignore = true; };
-  }, [absencesProp, studentId]);
+  }, [absencesProp, studentId, user?.roles]);
 
   if (loading) return <p className="text-gray-500 text-sm">Chargement…</p>;
   if (err) return <p className="text-red-600 text-sm">{err}</p>;

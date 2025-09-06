@@ -8,5 +8,6 @@ import NextDayCourses from "./NextDayCourses/NextDayCourses";
 import InjustifiedAbsences from "./InjustifiedAbsences/InjustifiedAbsences";
 import ModalShell from "./ModalShell/ModalShell";
 import AbsenceJustifyModal from "./AbsenceJustifyModal/AbsenceJustifyModal";
+import DailyCourses from "./DailyCourses";
 
-export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses, InjustifiedAbsences, ModalShell, AbsenceJustifyModal };
+export { Authentification, SideBar, GradeGrid, UnjustifiedAbsences, Header, EmploiDuTemps, NextDayCourses, InjustifiedAbsences, ModalShell, AbsenceJustifyModal, DailyCourses };
