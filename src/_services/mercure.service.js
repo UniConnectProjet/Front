@@ -178,4 +178,5 @@ class MercureService {
   }
 }
 
-export default new MercureService();
+const mercureService = new MercureService();
+export default mercureService;

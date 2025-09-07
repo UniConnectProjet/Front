@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChatLayout, SideBar, Header } from '../../components/organisms';
 import { LoadingSpinner, Image } from '../../components/atoms';
 import { useAuth } from '../../auth/AuthProvider';
@@ -21,31 +21,6 @@ const Chat = () => {
 
   const currentUserId = currentUser?.id; // Utiliser l'ID de l'utilisateur connecté
 
-  // Initialisation
-  useEffect(() => {
-    initializeChat();
-    loadConversationsFromStorage();
-    
-    // Établir la connexion Mercure globale
-    if (currentUser?.id) {
-      setupGlobalMercureConnection();
-      
-      // Polling de secours pour les conversations (toutes les 5 secondes)
-      const conversationPolling = setInterval(() => {
-        loadConversations();
-      }, 5000);
-      
-      return () => {
-        clearInterval(conversationPolling);
-        mercureService.disconnect();
-      };
-    }
-    
-    return () => {
-      mercureService.disconnect();
-    };
-  }, [currentUser?.id]);
-
   // Sauvegarder les conversations dans localStorage
   const saveConversationsToStorage = (conversations) => {
     try {
@@ -57,7 +32,7 @@ const Chat = () => {
   };
 
   // Charger les conversations depuis localStorage
-  const loadConversationsFromStorage = () => {
+  const loadConversationsFromStorage = useCallback(() => {
     try {
       const saved = localStorage.getItem('chat_conversations');
       if (saved) {
@@ -81,16 +56,19 @@ const Chat = () => {
     } catch (error) {
       // Erreur silencieuse - pas de log console
     }
-  };
+  }, [currentUserId]);
 
-  // Connexion Mercure quand une conversation est sélectionnée
-  useEffect(() => {
-    if (activeConversation) {
-      setupMercureConnection();
+  const loadConversations = useCallback(async () => {
+    try {
+      const data = await chatService.getConversations();
+      // console.log('Conversations chargées:', data);
+      setConversations(data);
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
     }
-  }, [activeConversation]);
+  }, []);
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -109,19 +87,27 @@ const Chat = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUser, loadConversations]);
 
-  const loadConversations = async () => {
+  const loadMessages = useCallback(async (conversationId, page = 1) => {
     try {
-      const data = await chatService.getConversations();
-      // console.log('Conversations chargées:', data);
-      setConversations(data);
+      const messages = await chatService.getMessages(conversationId, page, 50);
+      const loadedMessages = messages || [];
+      
+      // Les messages du backend sont triés par createdAt DESC (plus récents en premier)
+      // On les inverse pour les afficher dans l'ordre chronologique (plus anciens en premier)
+      const sortedMessages = loadedMessages.reverse();
+      
+      setMessages(sortedMessages);
+      setHasMoreMessages(loadedMessages.length === 50); // Si on a 50 messages, il y en a peut-être plus
+      
+      // console.log('Messages chargés:', sortedMessages.length, 'messages');
     } catch (error) {
       // Erreur silencieuse - pas de log console
     }
-  };
+  }, []);
 
-  const setupGlobalMercureConnection = () => {
+  const setupGlobalMercureConnection = useCallback(() => {
     if (!currentUser?.id) return;
 
     const topics = [
@@ -160,9 +146,9 @@ const Chat = () => {
         }
       }
     });
-  };
+  }, [currentUser?.id, activeConversation, showToast, loadConversations, loadMessages]);
 
-  const setupMercureConnection = () => {
+  const setupMercureConnection = useCallback(() => {
     if (!activeConversation) return;
 
     const topics = [
@@ -195,7 +181,51 @@ const Chat = () => {
         )
       );
     });
-  };
+  }, [activeConversation, currentUser?.id]);
+
+  const markMessagesAsRead = useCallback(async (conversationId) => {
+    try {
+      await chatService.markMessagesAsRead(conversationId);
+      // Rafraîchir les conversations pour mettre à jour les indicateurs de lecture
+      await loadConversations();
+      // Déclencher l'événement pour mettre à jour le menu
+      window.dispatchEvent(new CustomEvent('messageRead'));
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  }, [loadConversations]);
+
+  // Initialisation
+  useEffect(() => {
+    initializeChat();
+    loadConversationsFromStorage();
+    
+    // Établir la connexion Mercure globale
+    if (currentUser?.id) {
+      setupGlobalMercureConnection();
+      
+      // Polling de secours pour les conversations (toutes les 5 secondes)
+      const conversationPolling = setInterval(() => {
+        loadConversations();
+      }, 5000);
+      
+      return () => {
+        clearInterval(conversationPolling);
+        mercureService.disconnect();
+      };
+    }
+    
+    return () => {
+      mercureService.disconnect();
+    };
+  }, [currentUser?.id, initializeChat, loadConversationsFromStorage, setupGlobalMercureConnection, loadConversations]);
+
+  // Connexion Mercure quand une conversation est sélectionnée
+  useEffect(() => {
+    if (activeConversation) {
+      setupMercureConnection();
+    }
+  }, [activeConversation, setupMercureConnection]);
 
   const handleConversationSelect = async (conversation) => {
     try {
@@ -267,7 +297,7 @@ const Chat = () => {
         document.removeEventListener(event, updateActivity, true);
       });
     };
-  }, [activeConversation?.id]);
+  }, [activeConversation?.id, loadMessages, activeConversation]);
 
   // Marquer les messages comme lus quand l'utilisateur fait défiler vers le bas
   useEffect(() => {
@@ -284,37 +314,7 @@ const Chat = () => {
     return () => {
       clearTimeout(markAsReadTimer);
     };
-  }, [activeConversation?.id, messages.length]);
-
-  const loadMessages = async (conversationId, page = 1) => {
-    try {
-      const messages = await chatService.getMessages(conversationId, page, 50);
-      const loadedMessages = messages || [];
-      
-      // Les messages du backend sont triés par createdAt DESC (plus récents en premier)
-      // On les inverse pour les afficher dans l'ordre chronologique (plus anciens en premier)
-      const sortedMessages = loadedMessages.reverse();
-      
-      setMessages(sortedMessages);
-      setHasMoreMessages(loadedMessages.length === 50); // Si on a 50 messages, il y en a peut-être plus
-      
-      // console.log('Messages chargés:', sortedMessages.length, 'messages');
-    } catch (error) {
-      // Erreur silencieuse - pas de log console
-    }
-  };
-
-  const markMessagesAsRead = async (conversationId) => {
-    try {
-      await chatService.markMessagesAsRead(conversationId);
-      // Rafraîchir les conversations pour mettre à jour les indicateurs de lecture
-      await loadConversations();
-      // Déclencher l'événement pour mettre à jour le menu
-      window.dispatchEvent(new CustomEvent('messageRead'));
-    } catch (error) {
-      // Erreur silencieuse - pas de log console
-    }
-  };
+  }, [activeConversation?.id, messages.length, markMessagesAsRead, activeConversation]);
 
   const handleLoadMoreMessages = async () => {
     if (!activeConversation || !hasMoreMessages) return;

@@ -19,7 +19,7 @@ const ConversationItem = ({
     if (currentUserId !== undefined && currentUserId !== null) {
       const otherParticipant = conversation.participants.find(p => 
         p.id !== currentUserId && 
-        p.id != currentUserId && 
+        p.id !== currentUserId && 
         String(p.id) !== String(currentUserId)
       );
       

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { MessageBubble, LoadingSpinner } from '../../atoms';
 
@@ -32,7 +32,7 @@ const MessageList = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!messagesContainerRef.current) return;
     
     const { scrollTop } = messagesContainerRef.current;
@@ -44,7 +44,7 @@ const MessageList = ({
     } else {
       setIsNearTop(false);
     }
-  };
+  }, [hasMore, isLoading, onLoadMore]);
 
   useEffect(() => {
     scrollToBottom();
@@ -56,7 +56,7 @@ const MessageList = ({
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [hasMore, isLoading]);
+  }, [handleScroll]);
 
   const renderMessage = (message, index) => {
     // Détection de l'utilisateur actuel

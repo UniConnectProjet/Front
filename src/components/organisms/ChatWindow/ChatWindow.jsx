@@ -24,7 +24,7 @@ const ChatWindow = ({
     if (currentUserId !== undefined && currentUserId !== null) {
       const otherParticipant = conversation.participants.find(p => 
         p.id !== currentUserId && 
-        p.id != currentUserId && // Comparaison lâche aussi
+        p.id !== currentUserId && // Comparaison lâche aussi
         String(p.id) !== String(currentUserId) // Comparaison de chaînes
       );
       if (otherParticipant) {

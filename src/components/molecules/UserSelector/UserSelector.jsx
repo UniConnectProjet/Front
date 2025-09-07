@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import UserCard from '../UserCard';
 import { LoadingSpinner } from '../../atoms';
@@ -15,11 +15,7 @@ const UserSelector = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]);
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       console.log('UserSelector - Début du chargement des utilisateurs');
@@ -52,7 +48,11 @@ const UserSelector = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser?.roles]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
 
   const handleUserSelect = (user) => {
