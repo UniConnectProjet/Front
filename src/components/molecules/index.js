@@ -7,15 +7,15 @@ import AbsenceJustification from "./AbsenceJustification/AbsenceJustification";
 import WeekdayHeader from "./WeekdayHeader/WeekdayHeader";
 import FormField from "./FormField/FormField";
 import FileUpload from "./FileUpload/FileUpload";
-import DashboardGrid from "./DashboardGrid";
-import QuickActions from "./QuickActions";
-import WeekScheduleGrid from "./WeekScheduleGrid";
-import DailySessions from "./DailySessions";
-import ConversationItem from "./ConversationItem";
-import MessageComposer from "./MessageComposer";
-import MessageList from "./MessageList";
-import UserSelector from "./UserSelector";
-import UserCard from "./UserCard";
+import DashboardGrid from "./DashboardGrid/DashboardGrid";
+import QuickActions from "./QuickActions/QuickActions";
+import WeekScheduleGrid from "./WeekScheduleGrid/WeekScheduleGrid";
+import DailySessions from "./DailySessions/DailySessions";
+import ConversationItem from "./ConversationItem/ConversationItem";
+import MessageComposer from "./MessageComposer/MessageComposer";
+import MessageList from "./MessageList/MessageList";
+import UserSelector from "./UserSelector/UserSelector";
+import UserCard from "./UserCard/UserCard";
 
 export { 
     Form, 

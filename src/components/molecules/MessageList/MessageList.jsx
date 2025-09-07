@@ -18,33 +18,11 @@ const MessageList = ({
 
   // Fonction pour détecter si c'est un message de l'utilisateur actuel
   const isUserMessage = (message, currentUserId) => {
-    // 1. Comparaison par ID
+    // Comparaison par ID uniquement
     const senderId = message.sender?.id;
-    if (isSameSender(senderId, currentUserId)) {
-      console.log('MessageList - Détection par ID:', senderId, '-> Message utilisateur');
-      return true;
-    }
+    const isOwn = isSameSender(senderId, currentUserId);
     
-    // 2. Fallback: Comparaison par nom si l'ID ne fonctionne pas
-    const senderName = message.sender?.name || message.sender?.firstName || '';
-    const senderLastName = message.sender?.lastname || message.sender?.lastName || '';
-    const fullSenderName = `${senderName} ${senderLastName}`.trim();
-    
-    // Détection par nom - chercher des patterns communs pour l'utilisateur actuel
-    const userPatterns = ['Daniel', 'Imbert', 'daniel', 'imbert'];
-    const isUserByName = userPatterns.some(pattern => 
-      fullSenderName.toLowerCase().includes(pattern.toLowerCase())
-    );
-    
-    if (isUserByName) {
-      console.log('MessageList - Détection par nom:', fullSenderName, '-> Message utilisateur');
-      return true;
-    }
-    
-    // 3. Fallback: Si c'est un message récent et qu'on n'a pas d'ID utilisateur, 
-    // on peut essayer de détecter par la fréquence des messages
-    console.log('MessageList - Message non-utilisateur:', fullSenderName);
-    return false;
+    return isOwn;
   };
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -81,17 +59,8 @@ const MessageList = ({
   }, [hasMore, isLoading]);
 
   const renderMessage = (message, index) => {
-    // Détection de l'utilisateur actuel avec fallback par nom
+    // Détection de l'utilisateur actuel
     const isOwn = isUserMessage(message, currentUserId);
-    
-    // Debug: Afficher les informations de comparaison
-    const senderId = message.sender?.id;
-    console.log('MessageList - Message:', message);
-    console.log('MessageList - Sender ID:', senderId, 'Type:', typeof senderId);
-    console.log('MessageList - Current User ID:', currentUserId, 'Type:', typeof currentUserId);
-    console.log('MessageList - Is Own:', isOwn);
-    console.log('MessageList - Sender Name:', message.sender?.name || message.sender?.firstName);
-    console.log('MessageList - Message Content:', message.content);
     
     const prevMessage = index > 0 ? messages[index - 1] : null;
     const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;

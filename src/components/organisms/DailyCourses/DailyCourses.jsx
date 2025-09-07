@@ -5,8 +5,7 @@ import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 import { DateNavigation, LoadingSpinner } from '../../atoms';
 import { DailySessions } from '../../molecules';
 
-import RollModal from '../ProfessorDashboard/RollModal';
-import GradesModal from '../ProfessorDashboard/GradesModal';
+import { RollModal, GradesModal } from '../ProfessorDashboard';
 
 const DailyCourses = ({ className = "" }) => {
     const [sessions, setSessions] = useState([]);

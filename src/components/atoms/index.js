@@ -11,15 +11,15 @@ import Filter from "./Filter/Filter";
 import Select from "./Select/Select";
 import TextArea from "./TextArea/TextArea";
 import ProgressBar from "./ProgressBar/ProgressBar";
-import DashboardCard from "./DashboardCard";
-import DateNavigation from "./DateNavigation";
-import EmptyState from "./EmptyState";
-import LoadingSpinner from "./LoadingSpinner";
-import SessionCard from "./SessionCard";
-import Avatar from "./Avatar";
-import MessageBubble from "./MessageBubble";
-import StatusIndicator from "./StatusIndicator";
-import MessageInput from "./MessageInput";
+import DashboardCard from "./DashboardCard/DashboardCard";
+import DateNavigation from "./DateNavigation/DateNavigation";
+import EmptyState from "./EmptyState/EmptyState";
+import LoadingSpinner from "./LoadingSpinner/LoadingSpinner";
+import SessionCard from "./SessionCard/SessionCard";
+import Avatar from "./Avatar/Avatar";
+import MessageBubble from "./MessageBubble/MessageBubble";
+import StatusIndicator from "./StatusIndicator/StatusIndicator";
+import MessageInput from "./MessageInput/MessageInput";
 
 export { 
     Button, 

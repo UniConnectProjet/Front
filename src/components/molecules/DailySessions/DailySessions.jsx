@@ -15,7 +15,7 @@ const DailySessions = ({
     if (sessions.length === 0) {
         return (
             <EmptyState
-                icon={BookOpen}
+                icon={<BookOpen />}
                 title={isToday ? 'Aucun cours aujourd&apos;hui' : 'Aucun cours ce jour'}
                 description={
                     isToday 

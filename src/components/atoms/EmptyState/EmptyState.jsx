@@ -17,7 +17,14 @@ const EmptyState = ({
             return <IconComponent className="w-16 h-16 text-gray-400 mx-auto mb-4" />;
         }
         
-        // Si c'est un élément JSX, le rendre directement
+        // Si c'est un élément JSX, le cloner avec les bonnes classes
+        if (React.isValidElement(icon)) {
+            return React.cloneElement(icon, {
+                className: "w-16 h-16 text-gray-400 mx-auto mb-4"
+            });
+        }
+        
+        // Si c'est autre chose, le rendre dans un div
         return <div className="w-16 h-16 text-gray-400 mx-auto mb-4">{icon}</div>;
     };
 
