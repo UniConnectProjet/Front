@@ -12,7 +12,7 @@ class ChatService {
       const response = await api.get(this.baseURL);
       return response.data;
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -22,21 +22,21 @@ class ChatService {
       const response = await api.get(`${this.baseURL}/${id}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching conversation:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
 
   async createConversation(participantIds, title = null) {
     try {
-      console.log('ChatService - Création de conversation avec participants:', participantIds);
+      // console.log('ChatService - Création de conversation avec participants:', participantIds);
       
       const response = await api.post(this.baseURL, { participantIds, title });
-      console.log('ChatService - Réponse création conversation:', response.data);
+      // console.log('ChatService - Réponse création conversation:', response.data);
       
       return response.data;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -49,14 +49,14 @@ class ChatService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
 
   async sendMessage(conversationId, content) {
     try {
-      console.log('ChatService - Envoi de message:', { conversationId, content });
+      // console.log('ChatService - Envoi de message:', { conversationId, content });
       
       const validation = validateMessageContent(content);
       
@@ -68,11 +68,11 @@ class ChatService {
         content
       });
       
-      console.log('ChatService - Réponse envoi message:', response.data);
+      // console.log('ChatService - Réponse envoi message:', response.data);
       
       return response.data;
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -82,7 +82,7 @@ class ChatService {
       const response = await api.put(`${this.baseURL}/${conversationId}/messages/${messageId}/read`);
       return response.data;
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -95,7 +95,7 @@ class ChatService {
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -105,7 +105,7 @@ class ChatService {
       const response = await api.get('/notifications/unread');
       return response.data;
     } catch (error) {
-      console.error('Error fetching unread notifications:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -115,7 +115,7 @@ class ChatService {
       const response = await api.put(`/notifications/${notificationId}/read`);
       return response.data;
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -125,7 +125,7 @@ class ChatService {
       const response = await api.put('/notifications/read-all');
       return response.data;
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -135,7 +135,7 @@ class ChatService {
       const response = await api.put(`/conversations/${conversationId}/messages/read`);
       return response.data;
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -145,7 +145,7 @@ class ChatService {
       const response = await api.get('/notifications/count');
       return response.data;
     } catch (error) {
-      console.error('Error fetching notification count:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -156,7 +156,7 @@ class ChatService {
       const response = await api.get('/mercure/hub-url');
       return response.data.hubUrl;
     } catch (error) {
-      console.error('Error fetching Mercure hub URL:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }
@@ -166,7 +166,7 @@ class ChatService {
       const response = await api.get('/mercure/topics');
       return response.data.topics;
     } catch (error) {
-      console.error('Error fetching Mercure topics:', error);
+      // Erreur silencieuse - pas de log console
       throw error;
     }
   }

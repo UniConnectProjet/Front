@@ -20,36 +20,32 @@ const Menu = ({ className = '' }) => {
         const fetchUnreadCount = async () => {
             try {
                 const conversations = await chatService.getConversations();
-                console.log('Menu: Conversations received:', conversations);
                 const totalUnread = conversations.reduce((total, conversation) => {
-                    console.log(`Conversation ${conversation.id}: unreadCount = ${conversation.unreadCount} (type: ${typeof conversation.unreadCount})`);
                     return total + (conversation.unreadCount || 0);
                 }, 0);
-                console.log('Menu: Total unread count updated:', totalUnread);
                 setUnreadCount(totalUnread);
             } catch (error) {
-                console.error('Error fetching unread count:', error);
+                // Erreur silencieuse - pas de log console
             }
         };
 
         fetchUnreadCount();
         
-        // Mettre à jour toutes les 3 secondes pour compenser l'absence de Mercure
-        const interval = setInterval(fetchUnreadCount, 3000);
+        // Polling moins fréquent pour réduire la charge serveur
+        const interval = setInterval(fetchUnreadCount, 15000); // 15 secondes au lieu de 3
         
-        // Polling plus fréquent quand on est sur la page chat
+        // Polling plus fréquent seulement quand on est sur la page chat
         const chatInterval = setInterval(() => {
           if (window.location.pathname === '/chat') {
             fetchUnreadCount();
           }
-        }, 2000);
+        }, 5000); // 5 secondes au lieu de 2
         
-        // Polling global pour toutes les pages (moins fréquent)
-        const globalInterval = setInterval(fetchUnreadCount, 10000);
+        // Polling global pour toutes les pages (beaucoup moins fréquent)
+        const globalInterval = setInterval(fetchUnreadCount, 30000); // 30 secondes au lieu de 10
         
         // Écouter les événements de mise à jour des messages
         const handleMessageUpdate = () => {
-            console.log('Menu: Message update event received');
             fetchUnreadCount();
         };
         

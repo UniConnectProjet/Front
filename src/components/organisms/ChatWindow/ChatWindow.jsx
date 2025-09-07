@@ -51,7 +51,7 @@ const ChatWindow = ({
 
   const handleAttachmentClick = () => {
     // TODO: Implémenter la logique d'attachement de fichiers
-    console.log('Attachment clicked');
+    // console.log('Attachment clicked');
   };
 
   if (!conversation) {

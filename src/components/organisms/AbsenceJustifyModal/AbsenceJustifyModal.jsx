@@ -149,13 +149,13 @@ export default function AbsenceJustifyModal({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-3">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
         <Button
           type="button"
           variant="outline"
           onClick={onClose}
           disabled={submitting}
-          className="border-text-300 text-text-700 hover:bg-text-100"
+          className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium"
         >
           Annuler
         </Button>
@@ -163,9 +163,16 @@ export default function AbsenceJustifyModal({
           type="button"
           onClick={handleSubmit}
           disabled={submitting}
-          className="rounded-5 !bg-buttonColor-400 hover:!bg-buttonColor-500 !text-white p-1 "
+          className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:transform-none disabled:shadow-none"
         >
-          {submitting ? "Envoi…" : "Valider"}
+          {submitting ? (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span>Envoi…</span>
+            </div>
+          ) : (
+            "Valider"
+          )}
         </Button>
       </div>
     </ModalShell>

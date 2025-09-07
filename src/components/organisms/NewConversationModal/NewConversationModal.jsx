@@ -24,7 +24,7 @@ const NewConversationModal = ({
         onClose();
       }
     } catch (error) {
-      console.error('Erreur lors de la création de la conversation:', error);
+      // Erreur silencieuse - pas de log console
     } finally {
       setIsCreating(false);
     }

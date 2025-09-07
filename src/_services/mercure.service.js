@@ -14,24 +14,24 @@ class MercureService {
       const response = await fetch('/api/mercure/hub-url');
       
       if (!response.ok) {
-        console.warn('Mercure service not available, continuing without real-time features');
+        // console.warn('Mercure service not available, continuing without real-time features');
         return false;
       }
       
       const data = await response.json();
       this.hubUrl = data.hubUrl;
       
-      console.log('Mercure service initialized with hub URL:', this.hubUrl);
+      // console.log('Mercure service initialized with hub URL:', this.hubUrl);
       return true;
     } catch (error) {
-      console.warn('Failed to initialize Mercure service, continuing without real-time features:', error);
+      // console.warn('Failed to initialize Mercure service, continuing without real-time features:', error);
       return false;
     }
   }
 
   connect(topics = []) {
     if (!this.hubUrl) {
-      console.warn('Mercure service not initialized, skipping connection');
+      // console.warn('Mercure service not initialized, skipping connection');
       return false;
     }
 
@@ -48,7 +48,7 @@ class MercureService {
       this.eventSource = new EventSource(url.toString());
       
       this.eventSource.onopen = () => {
-        console.log('Mercure connection opened');
+        // console.log('Mercure connection opened');
         this.reconnectAttempts = 0;
       };
 
@@ -57,18 +57,18 @@ class MercureService {
           const data = JSON.parse(event.data);
           this.handleMessage(data, event.lastEventId);
         } catch (error) {
-          console.error('Error parsing Mercure message:', error);
+          // Erreur silencieuse - pas de log console
         }
       };
 
       this.eventSource.onerror = (error) => {
-        console.error('Mercure connection error:', error);
+        // Erreur silencieuse - pas de log console
         this.handleReconnect();
       };
 
       return true;
     } catch (error) {
-      console.error('Failed to connect to Mercure:', error);
+      // Erreur silencieuse - pas de log console
       return false;
     }
   }
@@ -77,22 +77,22 @@ class MercureService {
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
-      console.log('Mercure connection closed');
+      // console.log('Mercure connection closed');
     }
   }
 
   subscribe(topic, callback) {
     this.subscriptions.set(topic, callback);
-    console.log(`Subscribed to topic: ${topic}`);
+    // console.log(`Subscribed to topic: ${topic}`);
   }
 
   unsubscribe(topic) {
     this.subscriptions.delete(topic);
-    console.log(`Unsubscribed from topic: ${topic}`);
+    // console.log(`Unsubscribed from topic: ${topic}`);
   }
 
   handleMessage(data, eventId) {
-    console.log('Received Mercure message:', data);
+    // console.log('Received Mercure message:', data);
 
     // Déterminer le topic basé sur le type de message
     let topic = null;
@@ -114,14 +114,14 @@ class MercureService {
 
   handleReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('Max reconnection attempts reached');
+      // Erreur silencieuse - pas de log console
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
     
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    // console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
     
     setTimeout(() => {
       const topics = Array.from(this.subscriptions.keys());

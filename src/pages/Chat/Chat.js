@@ -52,9 +52,9 @@ const Chat = () => {
   const saveConversationsToStorage = (conversations) => {
     try {
       localStorage.setItem('chat_conversations', JSON.stringify(conversations));
-      console.log('✅ Conversations sauvegardées:', conversations.length, 'conversations');
+      // console.log('✅ Conversations sauvegardées:', conversations.length, 'conversations');
     } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde des conversations:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -78,10 +78,10 @@ const Chat = () => {
         
         setConversations(updatedConversations);
         saveConversationsToStorage(updatedConversations); // Sauvegarder les titres mis à jour
-        console.log('✅ Conversations chargées depuis le stockage:', updatedConversations.length);
+        // console.log('✅ Conversations chargées depuis le stockage:', updatedConversations.length);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des conversations:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -107,7 +107,7 @@ const Chat = () => {
       // Charger les conversations
       await loadConversations();
     } catch (error) {
-      console.error('Error initializing chat:', error);
+      // Erreur silencieuse - pas de log console
     } finally {
       setIsLoading(false);
     }
@@ -116,10 +116,10 @@ const Chat = () => {
   const loadConversations = async () => {
     try {
       const data = await chatService.getConversations();
-      console.log('Conversations chargées:', data);
+      // console.log('Conversations chargées:', data);
       setConversations(data);
     } catch (error) {
-      console.error('Error loading conversations:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -134,7 +134,7 @@ const Chat = () => {
 
     // Écouter les notifications
     mercureService.onNotification(user.id, (notification) => {
-      console.log('New notification:', notification);
+      // console.log('New notification:', notification);
       
       // Afficher une notification toast
       if (notification.type === 'message') {
@@ -176,7 +176,7 @@ const Chat = () => {
 
     // Écouter les nouveaux messages
     mercureService.onNewMessage(activeConversation.id, (message) => {
-      console.log('Nouveau message reçu:', message);
+      // console.log('Nouveau message reçu:', message);
       setMessages(prev => [...prev, message]);
       
       // Mettre à jour la conversation dans la liste
@@ -223,26 +223,51 @@ const Chat = () => {
       setupMercureConnection();
       
     } catch (error) {
-      console.error('Error selecting conversation:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
-  // Polling pour les messages de la conversation active
+  // Polling intelligent pour les messages de la conversation active
   useEffect(() => {
     if (!activeConversation) return;
 
-    const messagePolling = setInterval(async () => {
-      try {
-        await loadMessages(activeConversation.id, 1);
-        // Déclencher l'événement pour mettre à jour le menu
-        window.dispatchEvent(new CustomEvent('newMessage'));
-      } catch (error) {
-        console.error('Error polling messages:', error);
-      }
-    }, 3000); // Polling toutes les 3 secondes
+    let messagePolling;
+    let lastActivity = Date.now();
+    
+    // Polling adaptatif basé sur l'activité
+    const startPolling = () => {
+      const timeSinceLastActivity = Date.now() - lastActivity;
+      const pollingInterval = timeSinceLastActivity > 60000 ? 30000 : 10000; // 30s si inactif, 10s si actif
+      
+      messagePolling = setInterval(async () => {
+        try {
+          await loadMessages(activeConversation.id, 1);
+          // Déclencher l'événement pour mettre à jour le menu
+          window.dispatchEvent(new CustomEvent('newMessage'));
+        } catch (error) {
+          // Erreur silencieuse - pas de log console
+        }
+      }, pollingInterval);
+    };
+
+    // Détecter l'activité de l'utilisateur
+    const updateActivity = () => {
+      lastActivity = Date.now();
+    };
+
+    // Écouter les événements d'activité
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, updateActivity, true);
+    });
+
+    startPolling();
 
     return () => {
       clearInterval(messagePolling);
+      events.forEach(event => {
+        document.removeEventListener(event, updateActivity, true);
+      });
     };
   }, [activeConversation?.id]);
 
@@ -275,9 +300,9 @@ const Chat = () => {
       setMessages(sortedMessages);
       setHasMoreMessages(loadedMessages.length === 50); // Si on a 50 messages, il y en a peut-être plus
       
-      console.log('Messages chargés:', sortedMessages.length, 'messages');
+      // console.log('Messages chargés:', sortedMessages.length, 'messages');
     } catch (error) {
-      console.error('Error loading messages:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -289,7 +314,7 @@ const Chat = () => {
       // Déclencher l'événement pour mettre à jour le menu
       window.dispatchEvent(new CustomEvent('messageRead'));
     } catch (error) {
-      console.error('Error marking messages as read:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -310,9 +335,9 @@ const Chat = () => {
       setCurrentPage(nextPage);
       setHasMoreMessages(loadedMessages.length === 50);
       
-      console.log('Messages supplémentaires chargés:', sortedMessages.length, 'messages');
+      // console.log('Messages supplémentaires chargés:', sortedMessages.length, 'messages');
     } catch (error) {
-      console.error('Error loading more messages:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -320,11 +345,11 @@ const Chat = () => {
     if (!activeConversation) return;
     
     try {
-      console.log('Rafraîchissement des messages...');
+      // console.log('Rafraîchissement des messages...');
       await loadMessages(activeConversation.id, 1);
-      console.log('Messages rafraîchis');
+      // console.log('Messages rafraîchis');
     } catch (error) {
-      console.error('Error refreshing messages:', error);
+      // Erreur silencieuse - pas de log console
     }
   };
 
@@ -332,15 +357,15 @@ const Chat = () => {
     if (!activeConversation || !content.trim()) return;
 
     try {
-      console.log('Chat - Envoi de message:', { content, conversationId: activeConversation.id });
+      // console.log('Chat - Envoi de message:', { content, conversationId: activeConversation.id });
       setIsSending(true);
       const message = await chatService.sendMessage(activeConversation.id, content);
-      console.log('Chat - Message reçu:', message);
+      // console.log('Chat - Message reçu:', message);
       
       // Ajouter le message à la liste
       setMessages(prev => {
         const newMessages = [...prev, message];
-        console.log('Chat - Message ajouté:', newMessages.length);
+        // console.log('Chat - Message ajouté:', newMessages.length);
         return newMessages;
       });
 
@@ -356,7 +381,7 @@ const Chat = () => {
       });
       
     } catch (error) {
-      console.error('Error sending message:', error);
+      // Erreur silencieuse - pas de log console
     } finally {
       setIsSending(false);
     }
@@ -364,7 +389,7 @@ const Chat = () => {
 
   const handleNewConversation = async (participantIds) => {
     try {
-      console.log('Creating new conversation with participants:', participantIds);
+      // console.log('Creating new conversation with participants:', participantIds);
       
       if (!participantIds || participantIds.length === 0) {
         throw new Error('Aucun participant sélectionné');
@@ -372,7 +397,7 @@ const Chat = () => {
 
       // Créer la conversation via l'API
       const conversation = await chatService.createConversation(participantIds);
-      console.log('Conversation créée avec succès:', conversation);
+      // console.log('Conversation créée avec succès:', conversation);
       
       // Générer le titre basé sur l'interlocuteur
       const otherParticipant = conversation.participants?.find(p => p.id !== currentUserId);
@@ -395,10 +420,9 @@ const Chat = () => {
       setCurrentPage(1);
       setHasMoreMessages(false);
       
-      console.log('Conversation ouverte avec', conversation.messages?.length || 0, 'messages');
+      // console.log('Conversation ouverte avec', conversation.messages?.length || 0, 'messages');
     } catch (error) {
-      console.error('Erreur lors de la création de la conversation:', error);
-      // Ici vous pourriez afficher une notification d'erreur
+      // Erreur silencieuse - pas de log console
     }
   };
 
