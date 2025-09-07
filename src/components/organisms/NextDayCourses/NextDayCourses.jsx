@@ -66,6 +66,11 @@ const NextDayCourses = ({ className = "" }) => {
     }
 
     const resolveStudentId = async () => {
+      // Vérifier d'abord si l'utilisateur est un étudiant
+      if (!user?.roles?.includes('ROLE_STUDENT')) {
+        return null;
+      }
+      
       try {
         const r = await api.get("/me/student");
         return r?.data?.id ?? null;

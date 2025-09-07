@@ -3,6 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../_services/api";
 import { EmploiDuTemps, SideBar } from "../../components/organisms";
+import { useAuth } from "../../auth/AuthProvider";
 
 export default function Planning() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ export default function Planning() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const id = "requestIdleCallback" in window
@@ -29,47 +31,66 @@ export default function Planning() {
     try {
       setLoading(true); setError("");
       const params = {
-        from: start.toISOString(), to: end.toISOString(),
-        start: start.toISOString(), end: end.toISOString(),
+        from: start.toISOString().split('T')[0], // YYYY-MM-DD format
+        to: end.toISOString().split('T')[0],     // YYYY-MM-DD format
       };
       let data;
-      try {
-        ({ data } = await api.get("/me/schedule", { params }));
-      } catch (e1) {
-        const status = e1?.response?.status;
-        if (status === 404 || status === 405 || status === 500 || status === 501) {
-          const me = await api.get("/me/student");
-          const sid = me?.data?.id;
-          if (!sid) throw e1;
-          ({ data } = await api.get(`/students/${sid}/schedule`, { params }));
-        } else {
-          throw e1;
+      
+      // Utiliser le bon endpoint selon le rôle de l'utilisateur
+      if (user?.roles?.includes('ROLE_PROFESSOR')) {
+        // Pour les professeurs, utiliser l'endpoint professeur
+        ({ data } = await api.get("/prof/sessions", { params }));
+      } else if (user?.roles?.includes('ROLE_STUDENT')) {
+        // Pour les étudiants, utiliser l'endpoint étudiant
+        try {
+          ({ data } = await api.get("/me/schedule", { params }));
+        } catch (e1) {
+          const status = e1?.response?.status;
+          if (status === 404 || status === 405 || status === 500 || status === 501) {
+            const me = await api.get("/me/student");
+            const sid = me?.data?.id;
+            if (!sid) throw e1;
+            ({ data } = await api.get(`/students/${sid}/schedule`, { params }));
+          } else {
+            throw e1;
+          }
         }
+      } else {
+        throw new Error("Rôle utilisateur non reconnu");
       }
       const map = (arr) => (Array.isArray(arr) ? arr : []).map((e, i) => {
         const ep = e.extendedProps || {};
-        const professorRaw =
-          e.professor?.name ??
-          ep.professor?.name ??
-          (typeof e.professor === "string" ? e.professor : null) ??
-          (typeof ep.professor === "string" ? ep.professor : null) ??
-          e.teacher ?? e.intervenant ?? e.instructor ?? null;
+        
+        // Pour l'endpoint professeur, les données ont un format différent
+        const isProfessorFormat = e.courseTitle && e.classLabel;
+        
+        const professorRaw = isProfessorFormat 
+          ? null // Les professeurs n'ont pas besoin d'afficher le professeur (c'est eux)
+          : e.professor?.name ??
+            ep.professor?.name ??
+            (typeof e.professor === "string" ? e.professor : null) ??
+            (typeof ep.professor === "string" ? ep.professor : null) ??
+            e.teacher ?? e.intervenant ?? e.instructor ?? null;
 
-        const locationRaw =
-          e.location ??
-          ep.location?.name ??
-          ep.location ??
-          e.room ?? e.salle ?? null;
+        const locationRaw = isProfessorFormat
+          ? e.room
+          : e.location ??
+            ep.location?.name ??
+            ep.location ??
+            e.room ?? e.salle ?? null;
 
         return {
           id: String(e.id ?? i),
-          title: e.title ?? e.name ?? e.courseName ?? e.course ?? "Cours",
+          title: isProfessorFormat 
+            ? e.courseTitle 
+            : e.title ?? e.name ?? e.courseName ?? e.course ?? "Cours",
           start: e.start ?? e.startAt ?? e.startedAt ?? e.begin ?? e.dateStart ?? e.date_start,
           end:   e.end   ?? e.endAt   ?? e.endedAt   ?? e.finish ?? e.dateEnd   ?? e.date_end,
           extendedProps: {
             ...ep,                                        
             professor: professorRaw ? String(professorRaw) : null,
             location:  locationRaw  ? String(locationRaw)  : null,
+            classe: isProfessorFormat ? e.classLabel : null,
             raw: e,
           },
         };

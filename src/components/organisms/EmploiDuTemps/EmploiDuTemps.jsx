@@ -61,7 +61,7 @@ const EmploiDuTemps = ({ events, onDatesSet }) => {
         firstDay={1} 
         allDaySlot={false}
         slotMinTime="08:00:00"
-        slotMaxTime="19:00:00"
+        slotMaxTime="21:00:00"
         eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
         events={events}
         eventContent={renderEventContent}
