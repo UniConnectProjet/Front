@@ -134,18 +134,18 @@ function ToastItem({ toast, onClose }) {
       icon: "⚠",
     },
     warning: {
-      box: "bg-amber-500 text-text-900",
+      box: "bg-amber-500 text-gray-900",
       bar: "bg-amber-300",
       icon: "!",
     },
     info: {
-      box: "bg-text-900 text-white",
-      bar: "bg-primary-400",
+      box: "bg-gray-900 text-white",
+      bar: "bg-blue-400",
       icon: "i",
     },
   }[type] || {
-    box: "bg-text-900 text-white",
-    bar: "bg-primary-400",
+    box: "bg-gray-900 text-white",
+    bar: "bg-blue-400",
     icon: "i",
   };
 
@@ -160,7 +160,7 @@ function ToastItem({ toast, onClose }) {
         <p className="flex-1 text-[14px] leading-5">{text}</p>
         <button
           onClick={onClose}
-          className="ml-2 inline-flex shrink-0 rounded-md px-2 py-1 text-[12px] leading-4 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-400"
+          className="ml-2 inline-flex shrink-0 rounded-md px-2 py-1 text-[12px] leading-4 hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-400"
           aria-label="Fermer la notification"
         >
           Fermer

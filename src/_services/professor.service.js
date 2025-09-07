@@ -62,11 +62,10 @@ export async function getSessionRoll(sessionId) {
 
 /**
  * Enregistre l'appel (présence/absence/retard) pour une séance
- * POST /api/prof/roll/save
+ * POST /api/prof/sessions/{id}/roll
  */
 export async function saveSessionRoll(sessionId, attendances) {
-  const { data } = await api.post('/prof/roll/save', {
-    sessionId,
+  const { data } = await api.post(`/prof/sessions/${sessionId}/roll`, {
     attendances
   });
   return data;
@@ -148,7 +147,7 @@ export async function getClassCourses(classId) {
 
 /**
  * Enregistre les notes pour une classe et un cours
- * POST /api/test/grades
+ * POST /api/grade/save
  */
 export async function saveGrades(classId, courseId, assignments, grades) {
   const { data } = await api.post('/grade/save', {
