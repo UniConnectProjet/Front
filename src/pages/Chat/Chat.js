@@ -138,14 +138,22 @@ const Chat = () => {
         const senderName = notification.data?.senderName || 'Quelqu\'un';
         const messageContent = notification.content || 'Nouveau message';
         
-        showToast({
-          text: `${senderName}: ${messageContent}`,
-          type: 'info',
-          duration: 5000
-        });
+        // Ne pas afficher de toast si la conversation est active
+        if (!activeConversation || activeConversation.id !== notification.data?.conversationId) {
+          showToast({
+            text: `${senderName}: ${messageContent}`,
+            type: 'info',
+            duration: 5000
+          });
+        }
         
         // Rafraîchir les conversations pour mettre à jour le dernier message
         loadConversations();
+        
+        // Si c'est la conversation active, recharger les messages
+        if (activeConversation && activeConversation.id === notification.data?.conversationId) {
+          loadMessages(activeConversation.id, 1);
+        }
       }
     });
   };
@@ -202,6 +210,9 @@ const Chat = () => {
       // Charger les messages de la conversation
       await loadMessages(conversation.id, 1);
       
+      // Marquer les messages comme lus
+      await markMessagesAsRead(conversation.id);
+      
       // Configurer la connexion Mercure pour cette conversation
       setupMercureConnection();
       
@@ -227,6 +238,20 @@ const Chat = () => {
     };
   }, [activeConversation?.id]);
 
+  // Marquer les messages comme lus quand l'utilisateur fait défiler vers le bas
+  useEffect(() => {
+    if (!activeConversation || messages.length === 0) return;
+
+    // Délai pour marquer les messages comme lus (2 secondes après l'ouverture)
+    const markAsReadTimer = setTimeout(() => {
+      markMessagesAsRead(activeConversation.id);
+    }, 2000);
+
+    return () => {
+      clearTimeout(markAsReadTimer);
+    };
+  }, [activeConversation?.id, messages.length]);
+
   const loadMessages = async (conversationId, page = 1) => {
     try {
       const messages = await chatService.getMessages(conversationId, page, 50);
@@ -242,6 +267,16 @@ const Chat = () => {
       console.log('Messages chargés:', sortedMessages.length, 'messages');
     } catch (error) {
       console.error('Error loading messages:', error);
+    }
+  };
+
+  const markMessagesAsRead = async (conversationId) => {
+    try {
+      await chatService.markMessagesAsRead(conversationId);
+      // Rafraîchir les conversations pour mettre à jour les indicateurs de lecture
+      await loadConversations();
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
     }
   };
 

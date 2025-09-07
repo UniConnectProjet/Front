@@ -82,6 +82,7 @@ const ChatLayout = ({
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           currentUser={currentUser}
+          currentUserId={currentUserId}
           className="h-full"
         />
       </div>

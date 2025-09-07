@@ -101,8 +101,9 @@ class MercureService {
       topic = `conversation/${data.message.conversationId}`;
     } else if (data.type === 'conversation_update' && data.conversation?.id) {
       topic = `conversation/${data.conversation.id}`;
-    } else if (data.type === 'notification' && data.notification?.userId) {
-      topic = `user/${data.notification.userId}/notifications`;
+    } else if (data.type === 'notification' && (data.notification?.userId || data.userId)) {
+      const userId = data.notification?.userId || data.userId;
+      topic = `user/${userId}/notifications`;
     }
 
     if (topic && this.subscriptions.has(topic)) {

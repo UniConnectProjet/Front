@@ -17,8 +17,24 @@ const ChatWindow = ({
   const [isTyping, setIsTyping] = useState(false);
 
   const getOtherParticipant = () => {
-    if (!conversation?.participants) return {};
-    return conversation.participants.find(p => p.id !== currentUserId) || conversation.participants[0] || {};
+    if (!conversation?.participants || conversation.participants.length === 0) {
+      return {};
+    }
+    
+    // Si on a un currentUserId, chercher l'autre participant
+    if (currentUserId !== undefined && currentUserId !== null) {
+      const otherParticipant = conversation.participants.find(p => 
+        p.id !== currentUserId && 
+        p.id != currentUserId && // Comparaison lâche aussi
+        String(p.id) !== String(currentUserId) // Comparaison de chaînes
+      );
+      if (otherParticipant) {
+        return otherParticipant;
+      }
+    }
+    
+    // Fallback: prendre le premier participant si on ne trouve pas l'autre
+    return conversation.participants[0] || {};
   };
 
   const handleSendMessage = (content) => {
@@ -67,7 +83,7 @@ const ChatWindow = ({
           />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {conversation.title || `${otherParticipant.name} ${otherParticipant.lastname}`}
+              {`${otherParticipant.name} ${otherParticipant.lastname}`}
             </h3>
             <p className="text-sm text-gray-500">
               {otherParticipant.name} {otherParticipant.lastname}

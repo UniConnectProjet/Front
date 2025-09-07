@@ -14,6 +14,7 @@ const ConversationsList = ({
   searchQuery = '',
   onSearchChange,
   currentUser,
+  currentUserId,
   className = ''
 }) => {
   const [filteredConversations, setFilteredConversations] = useState(conversations);
@@ -144,6 +145,7 @@ const ConversationsList = ({
                 conversation={conversation}
                 isActive={conversation.id === activeConversationId}
                 onClick={handleConversationClick}
+                currentUserId={currentUserId}
               />
             ))}
           </div>
@@ -179,6 +181,7 @@ ConversationsList.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     roles: PropTypes.arrayOf(PropTypes.string)
   }),
+  currentUserId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   className: PropTypes.string
 };
 

@@ -130,6 +130,16 @@ class ChatService {
     }
   }
 
+  async markMessagesAsRead(conversationId) {
+    try {
+      const response = await api.put(`/conversations/${conversationId}/messages/read`);
+      return response.data;
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      throw error;
+    }
+  }
+
   async getNotificationCount() {
     try {
       const response = await api.get('/notifications/count');

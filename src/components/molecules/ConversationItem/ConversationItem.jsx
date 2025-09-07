@@ -11,11 +11,68 @@ const ConversationItem = ({
 }) => {
   const getOtherParticipant = () => {
     // Trouver le participant qui n'est pas l'utilisateur actuel
-    return conversation.participants?.find(p => p.id !== currentUserId) || conversation.participants?.[0] || {};
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return {};
+    }
+    
+    // Si on a un currentUserId, chercher l'autre participant
+    if (currentUserId !== undefined && currentUserId !== null) {
+      const otherParticipant = conversation.participants.find(p => 
+        p.id !== currentUserId && 
+        p.id != currentUserId && 
+        String(p.id) !== String(currentUserId)
+      );
+      
+      if (otherParticipant) {
+        return otherParticipant;
+      }
+    }
+    
+    // Si pas de currentUserId ou pas trouvé, essayer de deviner qui est l'autre participant
+    // En général, dans une conversation élève-professeur, on peut supposer que l'élève est le premier
+    // et le professeur le second, ou vice versa selon la structure des données
+    
+    // Si on a exactement 2 participants, essayer de deviner lequel est l'autre
+    if (conversation.participants.length === 2) {
+      // Si on peut identifier l'utilisateur actuel par d'autres moyens (comme le nom)
+      // ou si on sait que l'utilisateur actuel est toujours le premier, prendre le second
+      // Pour l'instant, on prend le second participant comme fallback
+      return conversation.participants[1] || conversation.participants[0] || {};
+    }
+    
+    // Fallback: prendre le premier participant
+    return conversation.participants[0] || {};
   };
 
   const getLastMessage = () => {
     return conversation.lastMessage || conversation.messages?.[conversation.messages.length - 1];
+  };
+
+  const getUnreadCount = () => {
+    // Utiliser le compteur de messages non lus fourni par le backend
+    if (conversation.unreadCount !== undefined) {
+      return conversation.unreadCount;
+    }
+    
+    // Fallback : compter les messages non lus si les messages sont disponibles
+    if (conversation.messages && Array.isArray(conversation.messages)) {
+      return conversation.messages.filter(message => 
+        message.sender?.id !== currentUserId && !message.isRead
+      ).length;
+    }
+    
+    // Fallback : utiliser le lastMessage pour déterminer s'il y a des messages non lus
+    if (conversation.lastMessage) {
+      const lastMessage = conversation.lastMessage;
+      const isLastMessageFromOther = lastMessage.sender?.id !== currentUserId;
+      const isLastMessageUnread = !lastMessage.isRead;
+      
+      if (isLastMessageFromOther && isLastMessageUnread) {
+        return 1; // Au moins 1 message non lu
+      }
+    }
+    
+    return 0;
   };
 
   const formatLastMessageTime = (dateString) => {
@@ -55,7 +112,8 @@ const ConversationItem = ({
   const displayLastName = otherParticipant.lastName || otherParticipant.lastname || '';
   const fullDisplayName = `${displayName} ${displayLastName}`.trim();
   const isLastMessageFromOther = lastMessage?.sender?.id !== currentUserId;
-  const hasUnreadMessages = lastMessage && isLastMessageFromOther && !lastMessage.isRead;
+  const unreadCount = getUnreadCount();
+  const hasUnreadMessages = unreadCount > 0;
 
   return (
     <div
@@ -84,7 +142,7 @@ const ConversationItem = ({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <h3 className={`text-sm font-medium truncate ${hasUnreadMessages ? 'text-gray-900 font-semibold' : 'text-gray-900'}`}>
-            {conversation.title || fullDisplayName}
+            {fullDisplayName}
           </h3>
           {lastMessage && (
             <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
@@ -99,8 +157,8 @@ const ConversationItem = ({
           </p>
           {hasUnreadMessages && (
             <div className="flex-shrink-0 ml-2">
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-blue-500 rounded-full">
-                1
+              <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 text-xs font-medium text-white bg-blue-500 rounded-full">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             </div>
           )}
