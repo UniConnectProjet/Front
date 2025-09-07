@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChatLayout } from '../../components/organisms';
-import { LoadingSpinner } from '../../components/atoms';
+import { ChatLayout, SideBar, Header } from '../../components/organisms';
+import { LoadingSpinner, Image } from '../../components/atoms';
 import { useAuth } from '../../auth/AuthProvider';
 import { useToast } from '../../components/molecules/ToastProvider/ToastProvider';
 import chatService from '../../_services/chat.service';
 import mercureService from '../../_services/mercure.service';
+import { Menu as MenuIcon, X } from 'lucide-react';
+import user from '../../assets/svg/user.svg';
 
 const Chat = () => {
   const { user } = useAuth();
@@ -17,6 +19,7 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const currentUserId = user?.id; // Utiliser l'ID de l'utilisateur connecté
 
@@ -150,6 +153,9 @@ const Chat = () => {
         // Rafraîchir les conversations pour mettre à jour le dernier message
         loadConversations();
         
+        // Déclencher l'événement pour mettre à jour le menu
+        window.dispatchEvent(new CustomEvent('newMessage'));
+        
         // Si c'est la conversation active, recharger les messages
         if (activeConversation && activeConversation.id === notification.data?.conversationId) {
           loadMessages(activeConversation.id, 1);
@@ -228,6 +234,8 @@ const Chat = () => {
     const messagePolling = setInterval(async () => {
       try {
         await loadMessages(activeConversation.id, 1);
+        // Déclencher l'événement pour mettre à jour le menu
+        window.dispatchEvent(new CustomEvent('newMessage'));
       } catch (error) {
         console.error('Error polling messages:', error);
       }
@@ -242,10 +250,13 @@ const Chat = () => {
   useEffect(() => {
     if (!activeConversation || messages.length === 0) return;
 
-    // Délai pour marquer les messages comme lus (2 secondes après l'ouverture)
+    // Délai pour marquer les messages comme lus (5 secondes après l'ouverture)
+    // Seulement si l'utilisateur est toujours sur la conversation
     const markAsReadTimer = setTimeout(() => {
-      markMessagesAsRead(activeConversation.id);
-    }, 2000);
+      if (activeConversation && messages.length > 0) {
+        markMessagesAsRead(activeConversation.id);
+      }
+    }, 5000);
 
     return () => {
       clearTimeout(markAsReadTimer);
@@ -275,6 +286,8 @@ const Chat = () => {
       await chatService.markMessagesAsRead(conversationId);
       // Rafraîchir les conversations pour mettre à jour les indicateurs de lecture
       await loadConversations();
+      // Déclencher l'événement pour mettre à jour le menu
+      window.dispatchEvent(new CustomEvent('messageRead'));
     } catch (error) {
       console.error('Error marking messages as read:', error);
     }
@@ -414,21 +427,53 @@ const Chat = () => {
   }
 
   return (
-    <div className="h-full">
-      <ChatLayout
-        conversations={conversations}
-        activeConversation={activeConversation}
-        messages={messages}
-        currentUserId={currentUserId}
-        currentUser={user}
-        onConversationSelect={handleConversationSelect}
-        onNewConversation={handleNewConversation}
-        onSendMessage={handleSendMessage}
-        onLoadMoreMessages={handleLoadMoreMessages}
-        onRefreshMessages={handleRefreshMessages}
-        onSearchConversations={handleSearchConversations}
-        className="h-full"
-      />
+    <div className="flex">
+      {/* SIDEBAR - affichée uniquement si isMenuOpen ou en grand écran */}
+      <div className={`
+        fixed md:static z-50 bg-white h-screen transition-transform duration-300
+        ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+        md:translate-x-0 w-20
+      `}>
+        <SideBar />
+      </div>
+
+      {/* OVERLAY (noir) mobile uniquement */}
+      {isMenuOpen && (
+        <div
+          onClick={() => setIsMenuOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+        />
+      )}
+
+      <div className="flex flex-col w-full h-screen overflow-x-hidden">
+        {/* HEADER MOBILE */}
+        <div className="md:hidden flex justify-between items-center p-4 bg-white shadow z-30">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={28} /> : <MenuIcon size={28} />}
+          </button>
+          <Image src={user} alt="User" className="w-10 h-10 rounded-full mx-auto md:hidden" />
+        </div>
+
+        <Header />
+        
+        {/* CONTENU CHAT */}
+        <div className="flex-1 bg-gray-50">
+          <ChatLayout
+            conversations={conversations}
+            activeConversation={activeConversation}
+            messages={messages}
+            currentUserId={currentUserId}
+            currentUser={user}
+            onConversationSelect={handleConversationSelect}
+            onNewConversation={handleNewConversation}
+            onSendMessage={handleSendMessage}
+            onLoadMoreMessages={handleLoadMoreMessages}
+            onRefreshMessages={handleRefreshMessages}
+            onSearchConversations={handleSearchConversations}
+            className="h-full"
+          />
+        </div>
+      </div>
     </div>
   );
 };

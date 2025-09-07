@@ -68,11 +68,13 @@ const ChatLayout = ({
 
   return (
     <div className={`flex h-full bg-gray-50 ${className}`}>
-      {/* Conversations Sidebar */}
+      {/* Conversations Sidebar - FIXE */}
       <div className={`
         ${isMobile ? 'w-full' : 'w-1/3 lg:w-1/4'} 
         ${showConversations ? 'flex' : 'hidden'}
         flex-col border-r border-gray-200 bg-white
+        h-full
+        ${isMobile ? 'fixed z-10' : ''}
       `}>
         <ConversationsList
           conversations={conversations}
@@ -83,15 +85,15 @@ const ChatLayout = ({
           onSearchChange={handleSearchChange}
           currentUser={currentUser}
           currentUserId={currentUserId}
-          className="h-full"
+          className="h-full overflow-y-auto"
         />
       </div>
 
-      {/* Chat Window */}
+      {/* Chat Window - SCROLLABLE */}
       <div className={`
         ${isMobile ? 'w-full' : 'flex-1'} 
         ${!showConversations ? 'flex' : isMobile ? 'hidden' : 'flex'}
-        flex-col
+        flex-col h-full
       `}>
         {isMobile && !showConversations && (
           <div className="flex items-center p-4 border-b border-gray-200 bg-white">
