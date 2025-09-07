@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { BookOpen, Plus, Save, X, Edit3 } from 'lucide-react';
-import { getMyClasses, getStudentsByClass, saveGrades, getProfessorGradesOverview, getCourseClassGrades, createGrade, updateGrade } from '../../../_services/professor.service';
+import { BookOpen, Plus, X, Edit3 } from 'lucide-react';
+import { getMyClasses, getStudentsByClass, getProfessorGradesOverview, getCourseClassGrades, createGrade, updateGrade } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const ClassGrades = ({ className = "" }) => {
@@ -17,7 +17,6 @@ const ClassGrades = ({ className = "" }) => {
     const [error, setError] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingGrade, setEditingGrade] = useState(null); // {studentId, assignmentId}
-    const [viewMode, setViewMode] = useState('view'); // 'view' ou 'edit'
     const [newAssignments, setNewAssignments] = useState(new Set()); // IDs des nouveaux devoirs
     const [newAssignment, setNewAssignment] = useState({
         title: '',
@@ -182,12 +181,10 @@ const ClassGrades = ({ className = "" }) => {
 
     const handleEditGrade = (studentId, assignmentId) => {
         setEditingGrade({ studentId, assignmentId });
-        setViewMode('edit');
     };
 
     const handleCancelEdit = () => {
         setEditingGrade(null);
-        setViewMode('view');
     };
 
     const handleSaveSingleGrade = async (studentId, assignmentId) => {
@@ -238,7 +235,6 @@ const ClassGrades = ({ className = "" }) => {
             });
             
             setEditingGrade(null);
-            setViewMode('view');
             
             // Retirer le devoir de la liste des nouveaux devoirs s'il était nouveau
             setNewAssignments(prev => {
@@ -281,14 +277,6 @@ const ClassGrades = ({ className = "" }) => {
         try {
             setSaving(true);
             
-            // Créer le devoir via l'API
-            const assignmentData = {
-                title: newAssignment.title,
-                divisor: parseFloat(newAssignment.maxPoints),
-                courseId: selectedCourse.courseId,
-                classId: selectedClass.id,
-                date: newAssignment.date
-            };
 
             const assignment = {
                 id: `${newAssignment.title}_${Date.now()}`,
@@ -341,89 +329,6 @@ const ClassGrades = ({ className = "" }) => {
         }
     };
 
-    const handleSaveGrades = async () => {
-        if (!selectedClass || !selectedCourse) {
-            showToast({ 
-                text: 'Veuillez sélectionner une classe et un cours', 
-                type: 'error' 
-            });
-            return;
-        }
-
-        try {
-            setSaving(true);
-            
-            // Filtrer les notes non vides et les sauvegarder une par une
-            const savedGrades = [];
-            
-            for (const studentId of Object.keys(grades)) {
-                const studentGrades = grades[studentId];
-                
-                for (const assignmentId of Object.keys(studentGrades)) {
-                    const grade = studentGrades[assignmentId];
-                    if (grade.score && grade.score.trim() !== '') {
-                        const assignment = assignments.find(a => a.id === assignmentId);
-                        if (assignment) {
-                            const gradeData = {
-                                grade: parseFloat(grade.score),
-                                dividor: assignment.maxPoints,
-                                title: assignment.title,
-                                course: selectedCourse.courseId,
-                                studentId: parseInt(studentId)
-                            };
-
-                            if (grade.gradeId) {
-                                // Mettre à jour une note existante
-                                await updateGrade(grade.gradeId, gradeData);
-                            } else {
-                                // Créer une nouvelle note
-                                const result = await createGrade(gradeData);
-                                if (result && result.gradeId) {
-                                    // Mettre à jour l'ID de la note dans l'état local
-                                    setGrades(prev => ({
-                                        ...prev,
-                                        [studentId]: {
-                                            ...prev[studentId],
-                                            [assignmentId]: {
-                                                ...prev[studentId][assignmentId],
-                                                gradeId: result.gradeId
-                                            }
-                                        }
-                                    }));
-                                }
-                                savedGrades.push(result);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (savedGrades.length === 0) {
-                showToast({ 
-                    text: 'Aucune note à enregistrer', 
-                    type: 'warning' 
-                });
-                return;
-            }
-            
-            showToast({ 
-                text: `${savedGrades.length} note(s) enregistrée(s) avec succès`, 
-                type: 'success' 
-            });
-            
-            // Recharger les données pour afficher les moyennes mises à jour
-            await loadCourseGrades(selectedCourse.courseId, selectedClass.id);
-            
-        } catch (err) {
-            console.error('Erreur lors de l\'enregistrement:', err);
-            showToast({ 
-                text: err.response?.data?.error || 'Erreur lors de l\'enregistrement des notes', 
-                type: 'error' 
-            });
-        } finally {
-            setSaving(false);
-        }
-    };
 
     const calculateClassAverage = (assignmentId) => {
         const assignment = assignments.find(a => a.id === assignmentId);
@@ -448,27 +353,6 @@ const ClassGrades = ({ className = "" }) => {
         return (sum / validGrades.length).toFixed(1);
     };
 
-    const calculateStudentAverage = (studentId) => {
-        const studentGrades = grades[studentId] || {};
-        const validGrades = [];
-        
-        Object.keys(studentGrades).forEach(assignmentId => {
-            const grade = studentGrades[assignmentId];
-            if (grade.score && grade.score.trim() !== '') {
-                const assignment = assignments.find(a => a.id === assignmentId);
-                if (assignment) {
-                    // Normaliser la note sur 20
-                    const normalizedScore = (parseFloat(grade.score) / assignment.maxPoints) * 20;
-                    validGrades.push(normalizedScore);
-                }
-            }
-        });
-
-        if (validGrades.length === 0) return 0;
-        
-        const sum = validGrades.reduce((acc, score) => acc + score, 0);
-        return (sum / validGrades.length).toFixed(1);
-    };
 
     return (
         <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
