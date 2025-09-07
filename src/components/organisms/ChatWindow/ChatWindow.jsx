@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { MessageList, MessageComposer } from '../../molecules';
-import { Avatar, Button, LoadingSpinner } from '../../atoms';
+import { Avatar, Button } from '../../atoms';
 
 const ChatWindow = ({ 
   conversation,
@@ -14,7 +14,6 @@ const ChatWindow = ({
   hasMoreMessages = false,
   className = ''
 }) => {
-  const [isTyping, setIsTyping] = useState(false);
 
   const getOtherParticipant = () => {
     if (!conversation?.participants || conversation.participants.length === 0) {
@@ -126,19 +125,6 @@ const ChatWindow = ({
         className="flex-1"
       />
 
-      {/* Typing Indicator */}
-      {isTyping && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-            <span>{otherParticipant.name} est en train d'écrire...</span>
-          </div>
-        </div>
-      )}
 
       {/* Message Composer */}
       <MessageComposer

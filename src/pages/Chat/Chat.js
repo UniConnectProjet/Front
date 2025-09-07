@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChatLayout, SideBar, Header } from '../../components/organisms';
 import { LoadingSpinner, Image } from '../../components/atoms';
 import { useAuth } from '../../auth/AuthProvider';
@@ -9,19 +9,17 @@ import { Menu as MenuIcon, X } from 'lucide-react';
 import user from '../../assets/svg/user.svg';
 
 const Chat = () => {
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const { push: showToast } = useToast();
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const currentUserId = user?.id; // Utiliser l'ID de l'utilisateur connecté
+  const currentUserId = currentUser?.id; // Utiliser l'ID de l'utilisateur connecté
 
   // Initialisation
   useEffect(() => {
@@ -29,7 +27,7 @@ const Chat = () => {
     loadConversationsFromStorage();
     
     // Établir la connexion Mercure globale
-    if (user?.id) {
+    if (currentUser?.id) {
       setupGlobalMercureConnection();
       
       // Polling de secours pour les conversations (toutes les 5 secondes)
@@ -46,7 +44,7 @@ const Chat = () => {
     return () => {
       mercureService.disconnect();
     };
-  }, [user?.id]);
+  }, [currentUser?.id]);
 
   // Sauvegarder les conversations dans localStorage
   const saveConversationsToStorage = (conversations) => {
@@ -97,7 +95,7 @@ const Chat = () => {
       setIsLoading(true);
       
       // Vérifier que l'utilisateur est connecté
-      if (!user) {
+      if (!currentUser) {
         throw new Error('User not authenticated');
       }
 
@@ -124,16 +122,16 @@ const Chat = () => {
   };
 
   const setupGlobalMercureConnection = () => {
-    if (!user?.id) return;
+    if (!currentUser?.id) return;
 
     const topics = [
-      `user/${user.id}/notifications`
+      `user/${currentUser.id}/notifications`
     ];
 
     mercureService.connect(topics);
 
     // Écouter les notifications
-    mercureService.onNotification(user.id, (notification) => {
+    mercureService.onNotification(currentUser.id, (notification) => {
       // console.log('New notification:', notification);
       
       // Afficher une notification toast
@@ -169,7 +167,7 @@ const Chat = () => {
 
     const topics = [
       `conversation/${activeConversation.id}`,
-      `user/${user.id}/notifications`
+      `user/${currentUser.id}/notifications`
     ];
 
     mercureService.connect(topics);
@@ -358,7 +356,6 @@ const Chat = () => {
 
     try {
       // console.log('Chat - Envoi de message:', { content, conversationId: activeConversation.id });
-      setIsSending(true);
       const message = await chatService.sendMessage(activeConversation.id, content);
       // console.log('Chat - Message reçu:', message);
       
@@ -382,8 +379,6 @@ const Chat = () => {
       
     } catch (error) {
       // Erreur silencieuse - pas de log console
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -426,8 +421,7 @@ const Chat = () => {
     }
   };
 
-  const handleSearchConversations = (query) => {
-    setSearchQuery(query);
+  const handleSearchConversations = () => {
     // La recherche est gérée côté client dans ConversationsList
   };
 
@@ -439,7 +433,7 @@ const Chat = () => {
     );
   }
 
-  if (!user) {
+  if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
@@ -487,7 +481,7 @@ const Chat = () => {
             activeConversation={activeConversation}
             messages={messages}
             currentUserId={currentUserId}
-            currentUser={user}
+            currentUser={currentUser}
             onConversationSelect={handleConversationSelect}
             onNewConversation={handleNewConversation}
             onSendMessage={handleSendMessage}

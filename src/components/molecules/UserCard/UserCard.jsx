@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Avatar from '../../atoms/Avatar';
-import { Button } from '../../atoms';
 
 const UserCard = ({ 
   user, 

@@ -10,6 +10,16 @@ export default [
   pluginJs.configs.recommended,
   pluginReact.configs.flat.recommended,
   {
+    files: ["**/*.test.{js,jsx}", "**/__tests__/**/*.{js,jsx}"],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.jest
+      }
+    }
+  },
+  {
     settings: {
       react: {
         version: "detect", // Détecte automatiquement la version de React

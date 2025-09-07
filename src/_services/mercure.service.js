@@ -61,7 +61,7 @@ class MercureService {
         }
       };
 
-      this.eventSource.onerror = (error) => {
+      this.eventSource.onerror = () => {
         // Erreur silencieuse - pas de log console
         this.handleReconnect();
       };

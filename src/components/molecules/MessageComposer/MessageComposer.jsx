@@ -17,9 +17,6 @@ const MessageComposer = ({
     setIsTyping(false);
   };
 
-  const handleTyping = (message) => {
-    setIsTyping(message.length > 0);
-  };
 
   return (
     <div className={`bg-white border-t border-gray-200 p-4 ${className}`}>
@@ -55,7 +52,7 @@ const MessageComposer = ({
                 <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                 <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
-              En train d'écrire...
+              En train d&apos;écrire...
             </div>
           )}
         </div>

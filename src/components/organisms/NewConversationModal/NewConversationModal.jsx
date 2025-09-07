@@ -7,8 +7,7 @@ const NewConversationModal = ({
   isOpen, 
   onClose, 
   currentUser, 
-  onCreateConversation,
-  className = "" 
+  onCreateConversation
 }) => {
   const [isCreating, setIsCreating] = useState(false);
 
@@ -92,8 +91,7 @@ NewConversationModal.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     roles: PropTypes.arrayOf(PropTypes.string)
   }),
-  onCreateConversation: PropTypes.func.isRequired,
-  className: PropTypes.string
+  onCreateConversation: PropTypes.func.isRequired
 };
 
 export default NewConversationModal;

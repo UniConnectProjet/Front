@@ -46,13 +46,8 @@ const ConversationsList = ({
   };
 
   const handleCreateConversation = async (participantIds) => {
-    try {
-      if (onNewConversation) {
-        await onNewConversation(participantIds);
-      }
-    } catch (error) {
-      // Erreur silencieuse - pas de log console
-      throw error;
+    if (onNewConversation) {
+      await onNewConversation(participantIds);
     }
   };
 

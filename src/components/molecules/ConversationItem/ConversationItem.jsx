@@ -111,7 +111,6 @@ const ConversationItem = ({
   const displayName = otherParticipant.firstName || otherParticipant.name || 'Utilisateur';
   const displayLastName = otherParticipant.lastName || otherParticipant.lastname || '';
   const fullDisplayName = `${displayName} ${displayLastName}`.trim();
-  const isLastMessageFromOther = lastMessage?.sender?.id !== currentUserId;
   const unreadCount = getUnreadCount();
   const hasUnreadMessages = unreadCount > 0;
 

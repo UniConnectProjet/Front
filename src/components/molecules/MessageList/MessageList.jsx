@@ -35,7 +35,7 @@ const MessageList = ({
   const handleScroll = () => {
     if (!messagesContainerRef.current) return;
     
-    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const { scrollTop } = messagesContainerRef.current;
     
     // Vérifier si on est près du haut pour charger plus de messages
     if (scrollTop < 100 && hasMore && !isLoading) {
