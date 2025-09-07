@@ -65,8 +65,9 @@ export default function Planning() {
         const isProfessorFormat = e.courseTitle && e.classLabel;
         
         const professorRaw = isProfessorFormat 
-          ? null // Les professeurs n'ont pas besoin d'afficher le professeur (c'est eux)
-          : e.professor?.name ??
+          ? (e.professor?.fullName || e.professor?.name || e.professor?.lastname || null) // Afficher le nom du professeur
+          : (ep.professor?.fullName || ep.professor?.name || ep.professor?.lastname || null) ?? // Format étudiant avec extendedProps
+            e.professor?.name ??
             ep.professor?.name ??
             (typeof e.professor === "string" ? e.professor : null) ??
             (typeof ep.professor === "string" ? ep.professor : null) ??

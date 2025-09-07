@@ -22,7 +22,13 @@ export async function getProfessorSessions({ from, to } = {}) {
     classe: session.classLabel,  // classLabel -> classe
     startAt: session.startAt,
     endAt: session.endAt,
-    room: session.room
+    room: session.room,
+    professor: session.professor ? {
+      id: session.professor.id,
+      name: session.professor.name,
+      lastname: session.professor.lastname,
+      fullName: `${session.professor.name || ''} ${session.professor.lastname || ''}`.trim()
+    } : null
   }));
 }
 
