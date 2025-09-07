@@ -104,7 +104,7 @@ export default function Planning() {
       else if (status === 401) { setError("Session expirée. Reconnecte-toi."); navigate("/"); }
       else { setError("Impossible de charger l'emploi du temps."); }
     } finally { setLoading(false); }
-  }, [navigate]);
+  }, [navigate, user?.roles]);
 
   return (
     <div className="flex">
