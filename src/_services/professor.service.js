@@ -14,7 +14,22 @@ export async function getProfessorSessions({ from, to } = {}) {
   if (to) params.to = to;
   
   const { data } = await api.get("/prof/sessions", { params });
-  return data;
+  
+  // Mapper les données pour correspondre au format attendu par les composants
+  return data.map(session => ({
+    id: session.id,
+    course: session.courseTitle, // courseTitle -> course
+    classe: session.classLabel,  // classLabel -> classe
+    startAt: session.startAt,
+    endAt: session.endAt,
+    room: session.room,
+    professor: session.professor ? {
+      id: session.professor.id,
+      name: session.professor.name,
+      lastname: session.professor.lastname,
+      fullName: `${session.professor.name || ''} ${session.professor.lastname || ''}`.trim()
+    } : null
+  }));
 }
 
 /**

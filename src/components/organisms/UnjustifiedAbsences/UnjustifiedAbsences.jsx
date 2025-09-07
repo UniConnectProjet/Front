@@ -50,6 +50,12 @@ export default function UnjustifiedAbsences({ absences: absencesProp, studentId,
       return;
     }
 
+    // Ne pas charger les absences si l'utilisateur n'est pas un étudiant
+    if (!user?.roles?.includes('ROLE_STUDENT')) {
+      setLoading(false);
+      return;
+    }
+
     (async () => {
       try {
         setErr(null);
