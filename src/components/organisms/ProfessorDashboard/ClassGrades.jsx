@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { BookOpen, Plus, Save, X } from 'lucide-react';
-import { getMyClasses, getStudentsByClass, saveGrades } from '../../../_services/professor.service';
+import { BookOpen, Plus, X, Edit3 } from 'lucide-react';
+import { getMyClasses, getStudentsByClass, getProfessorGradesOverview, getCourseClassGrades, createGrade, updateGrade } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const ClassGrades = ({ className = "" }) => {
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState(null);
+    const [courses, setCourses] = useState([]);
+    const [selectedCourse, setSelectedCourse] = useState(null);
     const [students, setStudents] = useState([]);
     const [assignments, setAssignments] = useState([]);
     const [grades, setGrades] = useState({});
@@ -14,6 +16,8 @@ const ClassGrades = ({ className = "" }) => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [editingGrade, setEditingGrade] = useState(null); // {studentId, assignmentId}
+    const [newAssignments, setNewAssignments] = useState(new Set()); // IDs des nouveaux devoirs
     const [newAssignment, setNewAssignment] = useState({
         title: '',
         maxPoints: 20,
@@ -52,25 +56,19 @@ const ClassGrades = ({ className = "" }) => {
             const studentsList = studentsData.students || [];
             setStudents(studentsList);
             
-            // Simuler la récupération des devoirs (pour l'instant)
-            const mockAssignments = [
-                { id: 1, title: 'Devoir 1', maxPoints: 20, coefficient: 1, date: '2025-01-15' },
-                { id: 2, title: 'Contrôle', maxPoints: 30, coefficient: 2, date: '2025-01-20' },
-            ];
-            setAssignments(mockAssignments);
+            // Charger tous les cours du professeur
+            const coursesData = await getProfessorGradesOverview();
+            const allCourses = coursesData.byCourse || [];
+            setCourses(allCourses);
             
-            // Initialiser les notes
+            // Initialiser les notes vides
             const defaultGrades = {};
             studentsList.forEach(student => {
                 defaultGrades[student.studentId] = {};
-                mockAssignments.forEach(assignment => {
-                    defaultGrades[student.studentId][assignment.id] = {
-                        score: '',
-                        comment: ''
-                    };
-                });
             });
             setGrades(defaultGrades);
+            setAssignments([]);
+            
         } catch (err) {
             console.error('Erreur lors du chargement des données:', err);
             setError('Impossible de charger les données');
@@ -83,13 +81,85 @@ const ClassGrades = ({ className = "" }) => {
         }
     };
 
+    const loadCourseGrades = async (courseId, classId) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            console.log('Chargement des notes pour cours:', courseId, 'classe:', classId);
+            
+            // Charger les notes pour ce cours et cette classe
+            const gradesData = await getCourseClassGrades(courseId, classId);
+            
+            console.log('Données reçues:', gradesData);
+            
+            // Transformer les données pour l'affichage
+            const controls = gradesData.controls || [];
+            console.log('Contrôles trouvés:', controls.length);
+            
+            const transformedAssignments = controls.map(control => ({
+                id: `${control.title}_${control.createdAt}`,
+                title: control.title,
+                maxPoints: control.divisor,
+                coefficient: 1, // Par défaut, on peut ajuster plus tard
+                date: control.createdAt.split('T')[0],
+                average: control.average,
+                count: control.count
+            }));
+            
+            console.log('Assignments transformés:', transformedAssignments);
+            setAssignments(transformedAssignments);
+            
+            // Transformer les notes des étudiants
+            const transformedGrades = {};
+            // Utiliser les étudiants de l'état local
+            students.forEach(student => {
+                transformedGrades[student.studentId] = {};
+                controls.forEach(control => {
+                    const studentGrade = control.grades.find(g => g.studentId === student.studentId);
+                    transformedGrades[student.studentId][`${control.title}_${control.createdAt}`] = {
+                        score: studentGrade ? studentGrade.grade.toString() : '',
+                        comment: studentGrade ? studentGrade.comment || '' : '',
+                        gradeId: studentGrade ? studentGrade.id : null
+                    };
+                });
+            });
+            
+            console.log('Grades transformés:', transformedGrades);
+            setGrades(transformedGrades);
+            
+        } catch (err) {
+            console.error('Erreur lors du chargement des notes:', err);
+            setError('Impossible de charger les notes');
+            showToast({ 
+                text: 'Erreur lors du chargement des notes', 
+                type: 'error' 
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleClassChange = (classId) => {
         const selected = classes.find(c => c.id === classId);
         setSelectedClass(selected);
+        setSelectedCourse(null);
         if (classId) {
             loadStudents(classId);
         } else {
             setStudents([]);
+            setAssignments([]);
+            setGrades({});
+            setCourses([]);
+        }
+    };
+
+    const handleCourseChange = (courseId) => {
+        const selected = courses.find(c => c.courseId === courseId);
+        setSelectedCourse(selected);
+        if (courseId && selectedClass) {
+            loadCourseGrades(courseId, selectedClass.id);
+        } else {
             setAssignments([]);
             setGrades({});
         }
@@ -109,7 +179,85 @@ const ClassGrades = ({ className = "" }) => {
         }));
     };
 
-    const handleCreateAssignment = () => {
+    const handleEditGrade = (studentId, assignmentId) => {
+        setEditingGrade({ studentId, assignmentId });
+    };
+
+    const handleCancelEdit = () => {
+        setEditingGrade(null);
+    };
+
+    const handleSaveSingleGrade = async (studentId, assignmentId) => {
+        try {
+            setSaving(true);
+            const grade = grades[studentId][assignmentId];
+            const assignment = assignments.find(a => a.id === assignmentId);
+            
+            if (!grade.score || grade.score.trim() === '') {
+                showToast({ 
+                    text: 'Veuillez saisir une note', 
+                    type: 'warning' 
+                });
+                return;
+            }
+
+            const gradeData = {
+                grade: parseFloat(grade.score),
+                dividor: assignment.maxPoints,
+                title: assignment.title,
+                course: selectedCourse.courseId,
+                studentId: parseInt(studentId)
+            };
+
+            if (grade.gradeId) {
+                // Mettre à jour une note existante
+                await updateGrade(grade.gradeId, gradeData);
+            } else {
+                // Créer une nouvelle note
+                const result = await createGrade(gradeData);
+                if (result && result.gradeId) {
+                    setGrades(prev => ({
+                        ...prev,
+                        [studentId]: {
+                            ...prev[studentId],
+                            [assignmentId]: {
+                                ...prev[studentId][assignmentId],
+                                gradeId: result.gradeId
+                            }
+                        }
+                    }));
+                }
+            }
+
+            showToast({ 
+                text: 'Note enregistrée avec succès', 
+                type: 'success' 
+            });
+            
+            setEditingGrade(null);
+            
+            // Retirer le devoir de la liste des nouveaux devoirs s'il était nouveau
+            setNewAssignments(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(assignmentId);
+                return newSet;
+            });
+            
+            // Recharger les données pour afficher les moyennes mises à jour
+            await loadCourseGrades(selectedCourse.courseId, selectedClass.id);
+            
+        } catch (err) {
+            console.error('Erreur lors de l\'enregistrement:', err);
+            showToast({ 
+                text: 'Erreur lors de l\'enregistrement de la note', 
+                type: 'error' 
+            });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleCreateAssignment = async () => {
         if (!newAssignment.title.trim()) {
             showToast({ 
                 text: 'Le titre du devoir est requis', 
@@ -118,97 +266,62 @@ const ClassGrades = ({ className = "" }) => {
             return;
         }
 
-        const assignment = {
-            id: Date.now(), // ID temporaire
-            ...newAssignment,
-            maxPoints: parseFloat(newAssignment.maxPoints),
-            coefficient: parseFloat(newAssignment.coefficient)
-        };
-
-        setAssignments(prev => [...prev, assignment]);
-        
-        // Ajouter des colonnes vides pour tous les étudiants
-        setGrades(prev => {
-            const newGrades = { ...prev };
-            students.forEach(student => {
-                if (!newGrades[student.studentId]) {
-                    newGrades[student.studentId] = {};
-                }
-                newGrades[student.studentId][assignment.id] = {
-                    score: '',
-                    comment: ''
-                };
-            });
-            return newGrades;
-        });
-
-        setNewAssignment({
-            title: '',
-            maxPoints: 20,
-            coefficient: 1,
-            date: new Date().toISOString().split('T')[0]
-        });
-        setShowCreateModal(false);
-        
-        showToast({ 
-            text: 'Devoir créé avec succès', 
-            type: 'success' 
-        });
-    };
-
-    const handleSaveGrades = async () => {
-        if (!selectedClass) {
+        if (!selectedCourse || !selectedClass) {
             showToast({ 
-                text: 'Veuillez sélectionner une classe', 
+                text: 'Veuillez sélectionner une classe et un cours', 
                 type: 'error' 
             });
             return;
         }
 
-
         try {
             setSaving(true);
             
-            // Filtrer les notes non vides
-            const validGrades = {};
-            Object.keys(grades).forEach(studentId => {
-                const studentGrades = grades[studentId];
-                const validStudentGrades = {};
-                
-                Object.keys(studentGrades).forEach(assignmentId => {
-                    const grade = studentGrades[assignmentId];
-                    if (grade.score && grade.score.trim() !== '') {
-                        validStudentGrades[assignmentId] = grade;
+
+            const assignment = {
+                id: `${newAssignment.title}_${Date.now()}`,
+                title: newAssignment.title,
+                maxPoints: parseFloat(newAssignment.maxPoints),
+                coefficient: parseFloat(newAssignment.coefficient),
+                date: newAssignment.date
+            };
+
+            setAssignments(prev => [...prev, assignment]);
+            
+            // Marquer ce devoir comme nouveau
+            setNewAssignments(prev => new Set([...prev, assignment.id]));
+            
+            // Ajouter des colonnes vides pour tous les étudiants
+            setGrades(prev => {
+                const newGrades = { ...prev };
+                students.forEach(student => {
+                    if (!newGrades[student.studentId]) {
+                        newGrades[student.studentId] = {};
                     }
+                    newGrades[student.studentId][assignment.id] = {
+                        score: '',
+                        comment: ''
+                    };
                 });
-                
-                if (Object.keys(validStudentGrades).length > 0) {
-                    validGrades[studentId] = validStudentGrades;
-                }
+                return newGrades;
             });
 
-            if (Object.keys(validGrades).length === 0) {
-                showToast({ 
-                    text: 'Aucune note à enregistrer', 
-                    type: 'warning' 
-                });
-                return;
-            }
-
-            // Enregistrer les notes
-            const result = await saveGrades(selectedClass.id, null, assignments, validGrades);
+            setNewAssignment({
+                title: '',
+                maxPoints: 20,
+                coefficient: 1,
+                date: new Date().toISOString().split('T')[0]
+            });
+            setShowCreateModal(false);
             
             showToast({ 
-                text: result.message || 'Notes enregistrées avec succès', 
+                text: 'Devoir créé avec succès', 
                 type: 'success' 
             });
-            
-            console.log('Notes enregistrées:', result.savedGrades);
-            
         } catch (err) {
-            console.error('Erreur lors de l\'enregistrement:', err);
+            console.error('Erreur lors de la création du devoir:', err);
             showToast({ 
-                text: err.response?.data?.error || 'Erreur lors de l\'enregistrement des notes', 
+                text: 'Erreur lors de la création du devoir', 
                 type: 'error' 
             });
         } finally {
@@ -216,10 +329,17 @@ const ClassGrades = ({ className = "" }) => {
         }
     };
 
+
     const calculateClassAverage = (assignmentId) => {
         const assignment = assignments.find(a => a.id === assignmentId);
         if (!assignment) return 0;
 
+        // Si on a déjà la moyenne de l'API, l'utiliser
+        if (assignment.average !== undefined) {
+            return assignment.average.toFixed(1);
+        }
+
+        // Sinon, calculer manuellement
         const validGrades = students
             .map(student => {
                 const grade = grades[student.studentId]?.[assignmentId];
@@ -232,6 +352,7 @@ const ClassGrades = ({ className = "" }) => {
         const sum = validGrades.reduce((acc, score) => acc + score, 0);
         return (sum / validGrades.length).toFixed(1);
     };
+
 
     return (
         <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
@@ -249,24 +370,45 @@ const ClassGrades = ({ className = "" }) => {
                 </button>
             </div>
 
-            {/* Sélection de classe */}
-            <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sélectionner une classe
-                </label>
-                <select
-                    value={selectedClass?.id || ''}
-                    onChange={(e) => handleClassChange(parseInt(e.target.value) || null)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Choisir une classe...</option>
-                    {classes.map(classe => (
-                        <option key={classe.id} value={classe.id}>
-                            {classe.name}
-                        </option>
-                    ))}
-                </select>
+            {/* Sélection de classe et cours */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Sélectionner une classe
+                    </label>
+                    <select
+                        value={selectedClass?.id || ''}
+                        onChange={(e) => handleClassChange(parseInt(e.target.value) || null)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Choisir une classe...</option>
+                        {classes.map(classe => (
+                            <option key={classe.id} value={classe.id}>
+                                {classe.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 
+                {selectedClass && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Sélectionner un cours
+                        </label>
+                        <select
+                            value={selectedCourse?.courseId || ''}
+                            onChange={(e) => handleCourseChange(parseInt(e.target.value) || null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Choisir un cours...</option>
+                            {courses.map(course => (
+                                <option key={course.courseId} value={course.courseId}>
+                                    {course.courseTitle}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
 
             {/* Grille des notes */}
@@ -297,14 +439,12 @@ const ClassGrades = ({ className = "" }) => {
                                 <span className="text-sm font-medium text-gray-700">
                                     {students.length} élèves
                                 </span>
-                                <button
-                                    onClick={handleSaveGrades}
-                                    disabled={saving}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    {saving ? 'Enregistrement...' : 'Enregistrer'}
-                                </button>
+                                <div className="text-sm text-gray-500">
+                                    {newAssignments.size > 0 
+                                        ? "Saisissez directement les notes pour les nouveaux devoirs" 
+                                        : "Cliquez sur l'icône crayon pour éditer une note"
+                                    }
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -337,29 +477,102 @@ const ClassGrades = ({ className = "" }) => {
                                                         <div className="text-sm text-gray-500">{student.email}</div>
                                                     </div>
                                                 </td>
-                                                {assignments.map(assignment => (
-                                                    <td key={assignment.id} className="py-3 px-3">
-                                                        <div className="space-y-2">
-                                                            <input
-                                                                type="number"
-                                                                step="0.1"
-                                                                min="0"
-                                                                max={assignment.maxPoints}
-                                                                value={grades[student.studentId]?.[assignment.id]?.score || ''}
-                                                                onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'score', e.target.value)}
-                                                                placeholder="Note"
-                                                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                            />
-                                                            <input
-                                                                type="text"
-                                                                value={grades[student.studentId]?.[assignment.id]?.comment || ''}
-                                                                onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'comment', e.target.value)}
-                                                                placeholder="Commentaire"
-                                                                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                ))}
+                                                {assignments.map(assignment => {
+                                                    const isEditing = editingGrade?.studentId === student.studentId && editingGrade?.assignmentId === assignment.id;
+                                                    const isNewAssignment = newAssignments.has(assignment.id);
+                                                    const grade = grades[student.studentId]?.[assignment.id];
+                                                    
+                                                    return (
+                                                        <td key={assignment.id} className="py-3 px-3">
+                                                            {isNewAssignment ? (
+                                                                // Vue d'édition directe pour les nouveaux devoirs
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.1"
+                                                                        min="0"
+                                                                        max={assignment.maxPoints}
+                                                                        value={grade?.score || ''}
+                                                                        onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'score', e.target.value)}
+                                                                        placeholder="Note"
+                                                                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={grade?.comment || ''}
+                                                                        onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'comment', e.target.value)}
+                                                                        placeholder="Commentaire"
+                                                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                    />
+                                                                    <div className="flex gap-1">
+                                                                        <button
+                                                                            onClick={() => handleSaveSingleGrade(student.studentId, assignment.id)}
+                                                                            disabled={saving}
+                                                                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                                                                        >
+                                                                            ✓
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : isEditing ? (
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.1"
+                                                                        min="0"
+                                                                        max={assignment.maxPoints}
+                                                                        value={grade?.score || ''}
+                                                                        onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'score', e.target.value)}
+                                                                        placeholder="Note"
+                                                                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={grade?.comment || ''}
+                                                                        onChange={(e) => handleGradeChange(student.studentId, assignment.id, 'comment', e.target.value)}
+                                                                        placeholder="Commentaire"
+                                                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                                    />
+                                                                    <div className="flex gap-1">
+                                                                        <button
+                                                                            onClick={() => handleSaveSingleGrade(student.studentId, assignment.id)}
+                                                                            disabled={saving}
+                                                                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50"
+                                                                        >
+                                                                            ✓
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={handleCancelEdit}
+                                                                            className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
+                                                                        >
+                                                                            ✕
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-2">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className="text-sm font-medium">
+                                                                            {grade?.score ? `${grade.score}/${assignment.maxPoints}` : '-'}
+                                                                        </span>
+                                                                        <button
+                                                                            onClick={() => handleEditGrade(student.studentId, assignment.id)}
+                                                                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                                            title="Modifier la note"
+                                                                        >
+                                                                            <Edit3 className="w-4 h-4" />
+                                                                        </button>
+                                                                    </div>
+                                                                    {grade?.comment && (
+                                                                        <div className="text-xs text-gray-600 italic">
+                                                                            {grade.comment}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
                                             </tr>
                                         ))}
                                         {/* Ligne moyenne de classe */}

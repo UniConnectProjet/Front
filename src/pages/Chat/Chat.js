@@ -265,7 +265,7 @@ const Chat = () => {
     // Polling adaptatif basé sur l'activité
     const startPolling = () => {
       const timeSinceLastActivity = Date.now() - lastActivity;
-      const pollingInterval = timeSinceLastActivity > 60000 ? 30000 : 10000; // 30s si inactif, 10s si actif
+      const pollingInterval = timeSinceLastActivity > 60000 ? 15000 : 5000; // 15s si inactif, 5s si actif
       
       messagePolling = setInterval(async () => {
         try {
