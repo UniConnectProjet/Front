@@ -152,15 +152,6 @@ export async function getStudentsByClass(classId) {
 }
 
 /**
- * Récupère les cours d'une classe spécifique pour le professeur connecté
- * GET /api/prof/classes/{classId}/courses
- */
-export async function getClassCourses(classId) {
-  const { data } = await api.get(`/prof/classes/${classId}/courses`);
-  return data;
-}
-
-/**
  * Enregistre les notes pour une classe et un cours
  * POST /api/grade/save
  */
@@ -180,5 +171,62 @@ export async function saveGrades(classId, courseId, assignments, grades) {
  */
 export async function getStudentGrades(studentId) {
   const { data } = await api.get(`/grade/student/${studentId}`);
+  return data;
+}
+
+/**
+ * Récupère la vue synthèse des notes du professeur
+ * GET /api/prof/grades/overview
+ */
+export async function getProfessorGradesOverview(from = null, to = null) {
+  const params = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+  
+  const { data } = await api.get("/prof/grades/overview", { params });
+  return data;
+}
+
+/**
+ * Récupère les notes détaillées pour un cours et une classe
+ * GET /api/prof/courses/{courseId}/classes/{classId}/grades
+ */
+export async function getCourseClassGrades(courseId, classId, from = null, to = null) {
+  const params = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+  
+  const { data } = await api.get(`/prof/courses/${courseId}/classes/${classId}/grades`, { params });
+  return data;
+}
+
+/**
+ * Récupère l'historique des saisies du professeur
+ * GET /api/prof/grades/history
+ */
+export async function getProfessorGradesHistory(from = null, to = null) {
+  const params = {};
+  if (from) params.from = from;
+  if (to) params.to = to;
+  
+  const { data } = await api.get("/prof/grades/history", { params });
+  return data;
+}
+
+/**
+ * Crée une nouvelle note
+ * POST /api/grade/student/{studentId}
+ */
+export async function createGrade(gradeData) {
+  const { data } = await api.post(`/grade/student/${gradeData.studentId}`, gradeData);
+  return data;
+}
+
+/**
+ * Met à jour une note existante
+ * PUT /api/grade/{studentId}
+ */
+export async function updateGrade(gradeId, gradeData) {
+  const { data } = await api.put(`/grade/${gradeData.studentId}`, gradeData);
   return data;
 }
