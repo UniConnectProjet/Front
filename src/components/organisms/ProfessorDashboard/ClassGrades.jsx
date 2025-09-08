@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { BookOpen, Plus, X, Edit3 } from 'lucide-react';
-import { getMyClasses, getStudentsByClass, getProfessorGradesOverview, getCourseClassGrades, createGrade, updateGrade } from '../../../_services/professor.service';
+import { getMyClasses, getStudentsByClass, getMyCourses, getCourseClassGrades, createGrade, updateGrade, saveAssignmentsAndGrades } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const ClassGrades = ({ className = "" }) => {
@@ -57,9 +57,8 @@ const ClassGrades = ({ className = "" }) => {
             setStudents(studentsList);
             
             // Charger tous les cours du professeur
-            const coursesData = await getProfessorGradesOverview();
-            const allCourses = coursesData.byCourse || [];
-            setCourses(allCourses);
+            const allCourses = await getMyCourses();
+            setCourses(allCourses || []);
             
             // Initialiser les notes vides
             const defaultGrades = {};
@@ -86,16 +85,11 @@ const ClassGrades = ({ className = "" }) => {
             setLoading(true);
             setError(null);
             
-            console.log('Chargement des notes pour cours:', courseId, 'classe:', classId);
-            
             // Charger les notes pour ce cours et cette classe
             const gradesData = await getCourseClassGrades(courseId, classId);
             
-            console.log('Données reçues:', gradesData);
-            
             // Transformer les données pour l'affichage
             const controls = gradesData.controls || [];
-            console.log('Contrôles trouvés:', controls.length);
             
             const transformedAssignments = controls.map(control => ({
                 id: `${control.title}_${control.createdAt}`,
@@ -107,7 +101,6 @@ const ClassGrades = ({ className = "" }) => {
                 count: control.count
             }));
             
-            console.log('Assignments transformés:', transformedAssignments);
             setAssignments(transformedAssignments);
             
             // Transformer les notes des étudiants
@@ -125,7 +118,6 @@ const ClassGrades = ({ className = "" }) => {
                 });
             });
             
-            console.log('Grades transformés:', transformedGrades);
             setGrades(transformedGrades);
             
         } catch (err) {
@@ -155,7 +147,7 @@ const ClassGrades = ({ className = "" }) => {
     };
 
     const handleCourseChange = (courseId) => {
-        const selected = courses.find(c => c.courseId === courseId);
+        const selected = courses.find(c => c.id === courseId);
         setSelectedCourse(selected);
         if (courseId && selectedClass) {
             loadCourseGrades(courseId, selectedClass.id);
@@ -205,7 +197,7 @@ const ClassGrades = ({ className = "" }) => {
                 grade: parseFloat(grade.score),
                 dividor: assignment.maxPoints,
                 title: assignment.title,
-                course: selectedCourse.courseId,
+                course: selectedCourse.id,
                 studentId: parseInt(studentId)
             };
 
@@ -244,7 +236,7 @@ const ClassGrades = ({ className = "" }) => {
             });
             
             // Recharger les données pour afficher les moyennes mises à jour
-            await loadCourseGrades(selectedCourse.courseId, selectedClass.id);
+            await loadCourseGrades(selectedCourse.id, selectedClass.id);
             
         } catch (err) {
             console.error('Erreur lors de l\'enregistrement:', err);
@@ -286,25 +278,33 @@ const ClassGrades = ({ className = "" }) => {
                 date: newAssignment.date
             };
 
-            setAssignments(prev => [...prev, assignment]);
+            // Ajouter le devoir à la liste locale
+            const updatedAssignments = [...assignments, assignment];
+            setAssignments(updatedAssignments);
             
             // Marquer ce devoir comme nouveau
             setNewAssignments(prev => new Set([...prev, assignment.id]));
             
             // Ajouter des colonnes vides pour tous les étudiants
-            setGrades(prev => {
-                const newGrades = { ...prev };
-                students.forEach(student => {
-                    if (!newGrades[student.studentId]) {
-                        newGrades[student.studentId] = {};
-                    }
-                    newGrades[student.studentId][assignment.id] = {
-                        score: '',
-                        comment: ''
-                    };
-                });
-                return newGrades;
+            const updatedGrades = { ...grades };
+            students.forEach(student => {
+                if (!updatedGrades[student.studentId]) {
+                    updatedGrades[student.studentId] = {};
+                }
+                updatedGrades[student.studentId][assignment.id] = {
+                    score: '',
+                    comment: ''
+                };
             });
+            setGrades(updatedGrades);
+
+            // Sauvegarder en base de données
+            await saveAssignmentsAndGrades(
+                selectedClass.id,
+                selectedCourse.id,
+                updatedAssignments,
+                updatedGrades
+            );
 
             setNewAssignment({
                 title: '',
@@ -315,7 +315,7 @@ const ClassGrades = ({ className = "" }) => {
             setShowCreateModal(false);
             
             showToast({ 
-                text: 'Devoir créé avec succès', 
+                text: 'Devoir créé et sauvegardé avec succès', 
                 type: 'success' 
             });
         } catch (err) {
@@ -396,14 +396,14 @@ const ClassGrades = ({ className = "" }) => {
                             Sélectionner un cours
                         </label>
                         <select
-                            value={selectedCourse?.courseId || ''}
+                            value={selectedCourse?.id || ''}
                             onChange={(e) => handleCourseChange(parseInt(e.target.value) || null)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Choisir un cours...</option>
                             {courses.map(course => (
-                                <option key={course.courseId} value={course.courseId}>
-                                    {course.courseTitle}
+                                <option key={course.id} value={course.id}>
+                                    {course.name}
                                 </option>
                             ))}
                         </select>

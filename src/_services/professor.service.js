@@ -239,3 +239,17 @@ export async function updateGrade(gradeId, gradeData) {
   const { data } = await api.put(`/grade/${gradeData.studentId}`, gradeData);
   return data;
 }
+
+/**
+ * Sauvegarde les devoirs et notes pour une classe
+ * POST /api/grade/save
+ */
+export async function saveAssignmentsAndGrades(classId, courseId, assignments, grades) {
+  const { data } = await api.post('/grade/save', {
+    classId,
+    courseId,
+    assignments,
+    grades
+  });
+  return data;
+}
