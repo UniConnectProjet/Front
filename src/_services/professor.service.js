@@ -23,6 +23,7 @@ export async function getProfessorSessions({ from, to } = {}) {
     startAt: session.startAt,
     endAt: session.endAt,
     room: session.room,
+    hasRoll: session.hasRoll || false, // Indique si la présence a été validée
     professor: session.professor ? {
       id: session.professor.id,
       name: session.professor.name,
