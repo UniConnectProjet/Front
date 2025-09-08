@@ -107,6 +107,15 @@ export async function getMyProfessor() {
 }
 
 /**
+ * Récupère l'ID du professeur connecté
+ * GET /api/professors/me
+ */
+export async function getMyProfessorId() {
+  const professor = await getMyProfessor();
+  return professor?.id || null;
+}
+
+/**
  * Récupère les catégories de notes
  * GET /api/categories
  */
