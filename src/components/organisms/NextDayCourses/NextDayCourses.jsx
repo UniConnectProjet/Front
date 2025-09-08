@@ -1,23 +1,30 @@
-// src/components/organisms/NextDayCourses/NextDayCourses.jsx
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { Title } from "../../atoms";
 import { api } from "../../../_services/api";
+import { useAuth } from "../../../auth/AuthProvider";
 
-const EventRow = ({ title, start, end, professor, location }) => (
-  <div className="bg-blue-100 p-3 mb-2 rounded">
-    <p className="font-semibold">{title}</p>
-    <div className="flex flex-col text-sm text-gray-700">
-      <span className="text-sm text-gray-600">
-        {start ? new Date(start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}{" – "}
-        {end ? new Date(end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}
-      </span>
-      <span className="text-sm text-gray-600">
-        {[professor, location].filter(Boolean).join(" • ")}
-      </span>
+const EventRow = ({ title, start, end, professor, location }) => {
+  // Gérer l'objet professeur correctement
+  const professorName = typeof professor === 'object' && professor !== null 
+    ? (professor.fullName || professor.name || professor.lastname || 'Professeur')
+    : professor || 'Professeur';
+
+  return (
+    <div className="bg-blue-100 p-3 mb-2 rounded">
+      <p className="font-semibold">{title}</p>
+      <div className="flex flex-col text-sm text-gray-700">
+        <span className="text-sm text-gray-600">
+          {start ? new Date(start).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}{" – "}
+          {end ? new Date(end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}
+        </span>
+        <span className="text-sm text-gray-600">
+          {[professorName, location].filter(Boolean).join(" • ")}
+        </span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 EventRow.propTypes = {
   title: PropTypes.string,
@@ -53,11 +60,24 @@ const NextDayCourses = ({ className = "" }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dayName, setDayName] = useState("");
+  const { user } = useAuth();
 
   useEffect(() => {
     let ignore = false;
 
+    // Ne pas charger les cours si l'utilisateur est un professeur
+    if (user?.roles?.includes('ROLE_PROFESSOR')) {
+      setLoading(false);
+      return;
+    }
+
     const resolveStudentId = async () => {
+      // Vérifier d'abord si l'utilisateur est un étudiant
+      if (!user?.roles?.includes('ROLE_STUDENT')) {
+        return null;
+      }
+      
       try {
         const r = await api.get("/me/student");
         return r?.data?.id ?? null;
@@ -77,6 +97,16 @@ const NextDayCourses = ({ className = "" }) => {
       const d0 = new Date(); d0.setHours(0,0,0,0); d0.setDate(d0.getDate() + 1);
       const d1 = new Date(d0); d1.setDate(d1.getDate() + 1);
       const fmt = (d) => d.toISOString().slice(0, 10);
+      
+      // Calculer le nom du jour et la date complète pour demain
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+      const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+      const dayName = dayNames[tomorrow.getDay()];
+      const dayNumber = tomorrow.getDate();
+      const monthName = monthNames[tomorrow.getMonth()];
+      const fullDate = `${dayName} ${dayNumber} ${monthName}`;
+      if (!ignore) setDayName(fullDate);
 
       try {
         const res = await api.get(`/students/${studentId}/schedule/next-day`);
@@ -104,7 +134,7 @@ const NextDayCourses = ({ className = "" }) => {
     })();
 
     return () => { ignore = true; };
-  }, []);
+  }, [user?.roles]);
 
   if (loading) {
     return (
@@ -117,7 +147,9 @@ const NextDayCourses = ({ className = "" }) => {
 
   return (
     <div className={`flex flex-col p-4 bg-gray-100 rounded-lg shadow-md ${className}`}>
-      <Title className="text-buttonColor-500 text-lg">Prochain cours :</Title>
+      <Title className="text-buttonColor-500 text-lg">
+        Prochain cours {dayName ? `(${dayName})` : ''} :
+      </Title>
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {!error && events.map((e, i) => (
         <EventRow

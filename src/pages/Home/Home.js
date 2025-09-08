@@ -1,11 +1,16 @@
 import React, {useState} from 'react';
 import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
-import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses } from '../../components/organisms';
+import { SideBar, GradeGrid, UnjustifiedAbsences, Header, NextDayCourses, DailyCourses } from '../../components/organisms';
+import { ClassGrades } from '../../components/organisms/ProfessorDashboard';
 import { Menu as MenuIcon, X } from 'lucide-react';
+import { useAuth } from '../../auth/AuthProvider';
+
 
 const Home = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { user: currentUser } = useAuth();
+
     return (
         <div className="flex">
             {/* SIDEBAR - affichée uniquement si isMenuOpen ou en grand écran */}
@@ -37,15 +42,33 @@ const Home = () => {
                 </div>
 
                 <Header />
-                <div className='flex flex-col lg:flex-row bg-white px-4 lg:px-8 gap-4'>
-                    <GradeGrid className="bg-gray-100 w-full lg:w-3/5"/>
-                     <div className="flex flex-col w-full lg:w-2/5 px-4 lg:px-20">
-                        <NextDayCourses
-                            className="bg-gray-100 w-full mb-4"
-                        />
-                        <UnjustifiedAbsences/>
+                
+                                    {/* Contenu conditionnel selon le rôle */}
+                    {currentUser?.roles?.includes('ROLE_PROFESSOR') ? (
+                    // Interface professeur
+                    <div className="flex-1 bg-gray-50 p-4 lg:p-8 overflow-y-auto">
+                        <div className="max-w-7xl mx-auto space-y-8">
+                            {/* Cours du jour */}
+                            <DailyCourses />
+                            
+                            {/* Composant de gestion des notes par classe */}
+                            <div className="max-w-4xl mx-auto">
+                                <ClassGrades />
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    // Interface étudiant (comportement par défaut)
+                    <div className='flex flex-col lg:flex-row bg-white px-4 lg:px-8 gap-4'>
+                        <GradeGrid className="bg-gray-100 w-full lg:w-3/5"/>
+                         <div className="flex flex-col w-full lg:w-2/5 px-4 lg:px-20">
+                            <NextDayCourses
+                                className="bg-gray-100 w-full mb-4"
+                            />
+                            <UnjustifiedAbsences/>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

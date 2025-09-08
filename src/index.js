@@ -4,11 +4,17 @@ import './index.css';
 import App from './App';
 import AuthProvider from './auth/AuthProvider';
 import reportWebVitals from './reportWebVitals';
+import { ToastProvider } from './components/molecules/ToastProvider/ToastProvider';
+import { BrowserRouter } from 'react-router-dom';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <AuthProvider>
-    <App />
-  </AuthProvider>
+  <BrowserRouter>
+    <ToastProvider position="top-right" max={4}>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </ToastProvider>
+  </BrowserRouter>
 );
 
 // If you want to start measuring performance in your app, pass a function

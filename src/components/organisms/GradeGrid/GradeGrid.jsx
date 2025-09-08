@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { GradeCard } from "../../molecules";
 import { Title, OverallAverage } from "../../atoms";
 import { api } from "../../../_services/api";
+import { useAuth } from "../../../auth/AuthProvider";
 
 const toJson = (raw) =>
   typeof raw === "string"
@@ -34,9 +35,17 @@ export default function GradeGrid() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     let ignore = false;
+    
+    // Ne pas charger les notes si l'utilisateur est un professeur
+    if (user?.roles?.includes('ROLE_PROFESSOR')) {
+      setLoading(false);
+      return;
+    }
+    
     (async () => {
       setLoading(true); setError(null);
       try {
@@ -50,7 +59,7 @@ export default function GradeGrid() {
       }
     })();
     return () => { ignore = true; };
-  }, []);
+  }, [user]);
 
   const overall = useMemo(() => computeOverall20(items), [items]);
 

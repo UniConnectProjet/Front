@@ -1,0 +1,499 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { ChatLayout, SideBar, Header } from '../../components/organisms';
+import { LoadingSpinner, Image } from '../../components/atoms';
+import { useAuth } from '../../auth/AuthProvider';
+import { useToast } from '../../components/molecules/ToastProvider/ToastProvider';
+import chatService from '../../_services/chat.service';
+import mercureService from '../../_services/mercure.service';
+import { Menu as MenuIcon, X } from 'lucide-react';
+import user from '../../assets/svg/user.svg';
+
+const Chat = () => {
+  const { user: currentUser } = useAuth();
+  const { push: showToast } = useToast();
+  const [conversations, setConversations] = useState([]);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const currentUserId = currentUser?.id; // Utiliser l'ID de l'utilisateur connecté
+
+  // Sauvegarder les conversations dans localStorage
+  const saveConversationsToStorage = (conversations) => {
+    try {
+      localStorage.setItem('chat_conversations', JSON.stringify(conversations));
+      // console.log('✅ Conversations sauvegardées:', conversations.length, 'conversations');
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  // Charger les conversations depuis localStorage
+  const loadConversationsFromStorage = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('chat_conversations');
+      if (saved) {
+        const conversations = JSON.parse(saved);
+        
+        // Mettre à jour les titres des conversations existantes
+        const updatedConversations = conversations.map(conversation => {
+          if (!conversation.title || conversation.title === 'Nouvelle conversation') {
+            const otherParticipant = conversation.participants?.find(p => p.id !== currentUserId);
+            if (otherParticipant) {
+              conversation.title = `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+            }
+          }
+          return conversation;
+        });
+        
+        setConversations(updatedConversations);
+        saveConversationsToStorage(updatedConversations); // Sauvegarder les titres mis à jour
+        // console.log('✅ Conversations chargées depuis le stockage:', updatedConversations.length);
+      }
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  }, [currentUserId]);
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const data = await chatService.getConversations();
+      // console.log('Conversations chargées:', data);
+      setConversations(data);
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  }, []);
+
+  const initializeChat = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // Vérifier que l'utilisateur est connecté
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      // Initialiser Mercure
+      await mercureService.initialize();
+
+      // Charger les conversations
+      await loadConversations();
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUser, loadConversations]);
+
+  const loadMessages = useCallback(async (conversationId, page = 1) => {
+    try {
+      const messages = await chatService.getMessages(conversationId, page, 50);
+      const loadedMessages = messages || [];
+      
+      // Les messages du backend sont triés par createdAt DESC (plus récents en premier)
+      // On les inverse pour les afficher dans l'ordre chronologique (plus anciens en premier)
+      const sortedMessages = loadedMessages.reverse();
+      
+      setMessages(sortedMessages);
+      setHasMoreMessages(loadedMessages.length === 50); // Si on a 50 messages, il y en a peut-être plus
+      
+      // console.log('Messages chargés:', sortedMessages.length, 'messages');
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  }, []);
+
+  const setupGlobalMercureConnection = useCallback(() => {
+    if (!currentUser?.id) return;
+
+    const topics = [
+      `user/${currentUser.id}/notifications`
+    ];
+
+    mercureService.connect(topics);
+
+    // Écouter les notifications
+    mercureService.onNotification(currentUser.id, (notification) => {
+      // console.log('New notification:', notification);
+      
+      // Afficher une notification toast
+      if (notification.type === 'message') {
+        const senderName = notification.data?.senderName || 'Quelqu\'un';
+        const messageContent = notification.content || 'Nouveau message';
+        
+        // Ne pas afficher de toast si la conversation est active
+        if (!activeConversation || activeConversation.id !== notification.data?.conversationId) {
+          showToast({
+            text: `${senderName}: ${messageContent}`,
+            type: 'info',
+            duration: 5000
+          });
+        }
+        
+        // Rafraîchir les conversations pour mettre à jour le dernier message
+        loadConversations();
+        
+        // Déclencher l'événement pour mettre à jour le menu
+        window.dispatchEvent(new CustomEvent('newMessage'));
+        
+        // Si c'est la conversation active, recharger les messages
+        if (activeConversation && activeConversation.id === notification.data?.conversationId) {
+          loadMessages(activeConversation.id, 1);
+        }
+      }
+    });
+  }, [currentUser?.id, activeConversation, showToast, loadConversations, loadMessages]);
+
+  const setupMercureConnection = useCallback(() => {
+    if (!activeConversation) return;
+
+    const topics = [
+      `conversation/${activeConversation.id}`,
+      `user/${currentUser.id}/notifications`
+    ];
+
+    mercureService.connect(topics);
+
+    // Écouter les nouveaux messages
+    mercureService.onNewMessage(activeConversation.id, (message) => {
+      // console.log('Nouveau message reçu:', message);
+      setMessages(prev => [...prev, message]);
+      
+      // Mettre à jour la conversation dans la liste
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === activeConversation.id 
+            ? { ...conv, lastMessage: message, updatedAt: new Date().toISOString() }
+            : conv
+        )
+      );
+    });
+
+    // Écouter les mises à jour de conversation
+    mercureService.onConversationUpdate(activeConversation.id, (conversation) => {
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversation.id ? { ...conv, ...conversation } : conv
+        )
+      );
+    });
+  }, [activeConversation, currentUser?.id]);
+
+  const markMessagesAsRead = useCallback(async (conversationId) => {
+    try {
+      await chatService.markMessagesAsRead(conversationId);
+      // Rafraîchir les conversations pour mettre à jour les indicateurs de lecture
+      await loadConversations();
+      // Déclencher l'événement pour mettre à jour le menu
+      window.dispatchEvent(new CustomEvent('messageRead'));
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  }, [loadConversations]);
+
+  // Initialisation
+  useEffect(() => {
+    initializeChat();
+    loadConversationsFromStorage();
+    
+    // Établir la connexion Mercure globale
+    if (currentUser?.id) {
+      setupGlobalMercureConnection();
+      
+      // Polling de secours pour les conversations (toutes les 5 secondes)
+      const conversationPolling = setInterval(() => {
+        loadConversations();
+      }, 5000);
+      
+      return () => {
+        clearInterval(conversationPolling);
+        mercureService.disconnect();
+      };
+    }
+    
+    return () => {
+      mercureService.disconnect();
+    };
+  }, [currentUser?.id, initializeChat, loadConversationsFromStorage, setupGlobalMercureConnection, loadConversations]);
+
+  // Connexion Mercure quand une conversation est sélectionnée
+  useEffect(() => {
+    if (activeConversation) {
+      setupMercureConnection();
+    }
+  }, [activeConversation, setupMercureConnection]);
+
+  const handleConversationSelect = async (conversation) => {
+    try {
+      // Générer le titre basé sur l'interlocuteur si ce n'est pas déjà fait
+      if (!conversation.title || conversation.title === 'Nouvelle conversation') {
+        const otherParticipant = conversation.participants?.find(p => p.id !== currentUserId);
+        if (otherParticipant) {
+          conversation.title = `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+        }
+      }
+      
+      setActiveConversation(conversation);
+      setMessages([]);
+      setCurrentPage(1);
+      
+      // Charger les messages de la conversation
+      await loadMessages(conversation.id, 1);
+      
+      // Marquer les messages comme lus
+      await markMessagesAsRead(conversation.id);
+      
+      // Configurer la connexion Mercure pour cette conversation
+      setupMercureConnection();
+      
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  // Polling intelligent pour les messages de la conversation active
+  useEffect(() => {
+    if (!activeConversation) return;
+
+    let messagePolling;
+    let lastActivity = Date.now();
+    
+    // Polling adaptatif basé sur l'activité
+    const startPolling = () => {
+      const timeSinceLastActivity = Date.now() - lastActivity;
+      const pollingInterval = timeSinceLastActivity > 60000 ? 30000 : 10000; // 30s si inactif, 10s si actif
+      
+      messagePolling = setInterval(async () => {
+        try {
+          await loadMessages(activeConversation.id, 1);
+          // Déclencher l'événement pour mettre à jour le menu
+          window.dispatchEvent(new CustomEvent('newMessage'));
+        } catch (error) {
+          // Erreur silencieuse - pas de log console
+        }
+      }, pollingInterval);
+    };
+
+    // Détecter l'activité de l'utilisateur
+    const updateActivity = () => {
+      lastActivity = Date.now();
+    };
+
+    // Écouter les événements d'activité
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, updateActivity, true);
+    });
+
+    startPolling();
+
+    return () => {
+      clearInterval(messagePolling);
+      events.forEach(event => {
+        document.removeEventListener(event, updateActivity, true);
+      });
+    };
+  }, [activeConversation?.id, loadMessages, activeConversation]);
+
+  // Marquer les messages comme lus quand l'utilisateur fait défiler vers le bas
+  useEffect(() => {
+    if (!activeConversation || messages.length === 0) return;
+
+    // Délai pour marquer les messages comme lus (5 secondes après l'ouverture)
+    // Seulement si l'utilisateur est toujours sur la conversation
+    const markAsReadTimer = setTimeout(() => {
+      if (activeConversation && messages.length > 0) {
+        markMessagesAsRead(activeConversation.id);
+      }
+    }, 5000);
+
+    return () => {
+      clearTimeout(markAsReadTimer);
+    };
+  }, [activeConversation?.id, messages.length, markMessagesAsRead, activeConversation]);
+
+  const handleLoadMoreMessages = async () => {
+    if (!activeConversation || !hasMoreMessages) return;
+
+    try {
+      const nextPage = currentPage + 1;
+      const messages = await chatService.getMessages(activeConversation.id, nextPage, 50);
+      const loadedMessages = messages || [];
+      
+      // Les messages du backend sont triés par createdAt DESC (plus récents en premier)
+      // On les inverse pour les afficher dans l'ordre chronologique
+      const sortedMessages = loadedMessages.reverse();
+      
+      // Ajouter les anciens messages au début de la liste
+      setMessages(prev => [...sortedMessages, ...prev]);
+      setCurrentPage(nextPage);
+      setHasMoreMessages(loadedMessages.length === 50);
+      
+      // console.log('Messages supplémentaires chargés:', sortedMessages.length, 'messages');
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  const handleRefreshMessages = async () => {
+    if (!activeConversation) return;
+    
+    try {
+      // console.log('Rafraîchissement des messages...');
+      await loadMessages(activeConversation.id, 1);
+      // console.log('Messages rafraîchis');
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  const handleSendMessage = async (content) => {
+    if (!activeConversation || !content.trim()) return;
+
+    try {
+      // console.log('Chat - Envoi de message:', { content, conversationId: activeConversation.id });
+      const message = await chatService.sendMessage(activeConversation.id, content);
+      // console.log('Chat - Message reçu:', message);
+      
+      // Ajouter le message à la liste
+      setMessages(prev => {
+        const newMessages = [...prev, message];
+        // console.log('Chat - Message ajouté:', newMessages.length);
+        return newMessages;
+      });
+
+      // Mettre à jour la conversation dans la liste
+      setConversations(prev => {
+        const updated = prev.map(conv => 
+          conv.id === activeConversation.id 
+            ? { ...conv, lastMessage: message, updatedAt: new Date().toISOString() }
+            : conv
+        );
+        saveConversationsToStorage(updated);
+        return updated;
+      });
+      
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  const handleNewConversation = async (participantIds) => {
+    try {
+      // console.log('Creating new conversation with participants:', participantIds);
+      
+      if (!participantIds || participantIds.length === 0) {
+        throw new Error('Aucun participant sélectionné');
+      }
+
+      // Créer la conversation via l'API
+      const conversation = await chatService.createConversation(participantIds);
+      // console.log('Conversation créée avec succès:', conversation);
+      
+      // Générer le titre basé sur l'interlocuteur
+      const otherParticipant = conversation.participants?.find(p => p.id !== currentUserId);
+      if (otherParticipant) {
+        conversation.title = `${otherParticipant.firstName} ${otherParticipant.lastName}`;
+      }
+      
+      // Ajouter la conversation à la liste
+      setConversations(prev => {
+        const newConversations = [conversation, ...prev];
+        saveConversationsToStorage(newConversations);
+        return newConversations;
+      });
+      
+      // Sélectionner automatiquement la nouvelle conversation
+      setActiveConversation(conversation);
+      
+      // Initialiser avec une liste de messages vide (pas de messages par défaut)
+      setMessages([]);
+      setCurrentPage(1);
+      setHasMoreMessages(false);
+      
+      // console.log('Conversation ouverte avec', conversation.messages?.length || 0, 'messages');
+    } catch (error) {
+      // Erreur silencieuse - pas de log console
+    }
+  };
+
+  const handleSearchConversations = () => {
+    // La recherche est gérée côté client dans ConversationsList
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Non connecté</h2>
+          <p className="text-gray-600">Veuillez vous connecter pour accéder au chat.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex">
+      {/* SIDEBAR - affichée uniquement si isMenuOpen ou en grand écran */}
+      <div className={`
+        fixed md:static z-50 bg-white h-screen transition-transform duration-300
+        ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
+        md:translate-x-0 w-20
+      `}>
+        <SideBar />
+      </div>
+
+      {/* OVERLAY (noir) mobile uniquement */}
+      {isMenuOpen && (
+        <div
+          onClick={() => setIsMenuOpen(false)}
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+        />
+      )}
+
+      <div className="flex flex-col w-full h-screen overflow-x-hidden">
+        {/* HEADER MOBILE */}
+        <div className="md:hidden flex justify-between items-center p-4 bg-white shadow z-30">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            {isMenuOpen ? <X size={28} /> : <MenuIcon size={28} />}
+          </button>
+          <Image src={user} alt="User" className="w-10 h-10 rounded-full mx-auto md:hidden" />
+        </div>
+
+        <Header />
+        
+        {/* CONTENU CHAT */}
+        <div className="flex-1 bg-gray-50">
+          <ChatLayout
+            conversations={conversations}
+            activeConversation={activeConversation}
+            messages={messages}
+            currentUserId={currentUserId}
+            currentUser={currentUser}
+            onConversationSelect={handleConversationSelect}
+            onNewConversation={handleNewConversation}
+            onSendMessage={handleSendMessage}
+            onLoadMoreMessages={handleLoadMoreMessages}
+            onRefreshMessages={handleRefreshMessages}
+            onSearchConversations={handleSearchConversations}
+            className="h-full"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Chat;
