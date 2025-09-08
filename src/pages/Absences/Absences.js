@@ -2,21 +2,58 @@ import React, { useEffect, useState } from "react";
 import { Image } from "../../components/atoms";
 import user from "../../assets/svg/user.svg";
 import { SideBar, InjustifiedAbsences } from "../../components/organisms";
+import ProfessorAttendance from "../../components/organisms/ProfessorAttendance/ProfessorAttendance";
 import { Menu, X } from "lucide-react";
-import { getMyStudentId } from "../../_services/student.service"; 
+import { getMyStudentId } from "../../_services/student.service";
+import { getMyProfessorId } from "../../_services/professor.service"; 
 
 export default function Absences() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [studentId, setStudentId] = useState(null);            
+  const [studentId, setStudentId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let ignore = false;
     (async () => {
       try {
-        const id = await getMyStudentId(); 
-        if (!ignore) setStudentId(id);
-      } catch {
-        if (!ignore) setStudentId(null);
+        setLoading(true);
+        
+        // Essayer de récupérer l'ID étudiant
+        try {
+          const studentIdResult = await getMyStudentId();
+          if (!ignore && studentIdResult) {
+            setStudentId(studentIdResult);
+            setUserRole('student');
+            return;
+          }
+        } catch (error) {
+          // Pas un étudiant, continuer
+        }
+
+        // Essayer de récupérer l'ID professeur
+        try {
+          const professorIdResult = await getMyProfessorId();
+          if (!ignore && professorIdResult) {
+            setUserRole('professor');
+            return;
+          }
+        } catch (error) {
+          // Pas un professeur, continuer
+        }
+
+        // Aucun rôle trouvé
+        if (!ignore) {
+          setUserRole(null);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setUserRole(null);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     })();
     return () => { ignore = true; };
@@ -40,10 +77,19 @@ export default function Absences() {
         </div>
 
         <div className="flex flex-col w-full bg-white px-4 md:px-8 mt-4">
-          {studentId ? (
+          {loading ? (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            </div>
+          ) : userRole === 'student' ? (
             <InjustifiedAbsences studentId={studentId} />
+          ) : userRole === 'professor' ? (
+            <ProfessorAttendance />
           ) : (
-            <p className="text-red-600 text-sm">Aucun identifiant étudiant trouvé — merci de vous reconnecter.</p>
+            <div className="flex flex-col items-center justify-center min-h-screen">
+              <p className="text-red-600 text-lg mb-4">Aucun rôle utilisateur trouvé</p>
+              <p className="text-gray-600 text-sm">Merci de vous reconnecter avec un compte étudiant ou professeur.</p>
+            </div>
           )}
         </div>
       </div>
