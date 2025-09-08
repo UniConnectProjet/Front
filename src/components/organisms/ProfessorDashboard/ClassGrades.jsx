@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { BookOpen, Plus, X, Edit3 } from 'lucide-react';
-import { getMyClasses, getStudentsByClass, getMyCourses, getCourseClassGrades, createGrade, updateGrade, saveAssignmentsAndGrades } from '../../../_services/professor.service';
+import { getMyClasses, getStudentsByClass, getMyCourses, getCourseClassGrades, createGrade, updateGrade } from '../../../_services/professor.service';
 import { useToast } from '../../molecules/ToastProvider/ToastProvider';
 
 const ClassGrades = ({ className = "" }) => {
@@ -121,7 +121,6 @@ const ClassGrades = ({ className = "" }) => {
             setGrades(transformedGrades);
             
         } catch (err) {
-            console.error('Erreur lors du chargement des notes:', err);
             setError('Impossible de charger les notes');
             showToast({ 
                 text: 'Erreur lors du chargement des notes', 
@@ -239,7 +238,6 @@ const ClassGrades = ({ className = "" }) => {
             await loadCourseGrades(selectedCourse.id, selectedClass.id);
             
         } catch (err) {
-            console.error('Erreur lors de l\'enregistrement:', err);
             showToast({ 
                 text: 'Erreur lors de l\'enregistrement de la note', 
                 type: 'error' 
@@ -278,33 +276,25 @@ const ClassGrades = ({ className = "" }) => {
                 date: newAssignment.date
             };
 
-            // Ajouter le devoir à la liste locale
-            const updatedAssignments = [...assignments, assignment];
-            setAssignments(updatedAssignments);
+            setAssignments(prev => [...prev, assignment]);
             
             // Marquer ce devoir comme nouveau
             setNewAssignments(prev => new Set([...prev, assignment.id]));
             
             // Ajouter des colonnes vides pour tous les étudiants
-            const updatedGrades = { ...grades };
-            students.forEach(student => {
-                if (!updatedGrades[student.studentId]) {
-                    updatedGrades[student.studentId] = {};
-                }
-                updatedGrades[student.studentId][assignment.id] = {
-                    score: '',
-                    comment: ''
-                };
+            setGrades(prev => {
+                const newGrades = { ...prev };
+                students.forEach(student => {
+                    if (!newGrades[student.studentId]) {
+                        newGrades[student.studentId] = {};
+                    }
+                    newGrades[student.studentId][assignment.id] = {
+                        score: '',
+                        comment: ''
+                    };
+                });
+                return newGrades;
             });
-            setGrades(updatedGrades);
-
-            // Sauvegarder en base de données
-            await saveAssignmentsAndGrades(
-                selectedClass.id,
-                selectedCourse.id,
-                updatedAssignments,
-                updatedGrades
-            );
 
             setNewAssignment({
                 title: '',
@@ -315,7 +305,7 @@ const ClassGrades = ({ className = "" }) => {
             setShowCreateModal(false);
             
             showToast({ 
-                text: 'Devoir créé et sauvegardé avec succès', 
+                text: 'Devoir créé avec succès', 
                 type: 'success' 
             });
         } catch (err) {
